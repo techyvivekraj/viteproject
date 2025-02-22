@@ -1,0 +1,1 @@
+export const NO_INTERNET = '/assets/no_internet.webp';
