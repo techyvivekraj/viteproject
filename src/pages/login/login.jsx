@@ -16,6 +16,8 @@ import { MantineLogo } from '@mantinex/mantine-logo';
 import { useCallback, useEffect, useMemo, } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { selectIsLoading, selectIsRegistered, selectUser } from '../../store/slices/authSlice';
+import '../../styles/index.css'
 
 export default function Login(props) {
   const [type, toggle] = useToggle(['login', 'register']);
@@ -163,10 +165,10 @@ export default function Login(props) {
 
             </Group>
           </form>
-          <Divider label="Or continue with email" labelPosition="center" my="lg" />
+          {/* <Divider label="Or continue with email" labelPosition="center" my="lg" />
           <Group grow mb="md" mt="md">
             <GoogleButton radius="xl">Google</GoogleButton>
-          </Group>
+          </Group> */}
         </Paper>
       </Container>
     </div>

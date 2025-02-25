@@ -1,0 +1,17 @@
+.full-background {
+    background-color: #f4f5ff;
+    min-height: 100vh;
+}
+.inner {
+    height: rem(56px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-color:'#f4f5ff'
+  }
+  .icon {
+    color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
+  }
+  .no_internet{
+    height: rem(100px);
+  }
