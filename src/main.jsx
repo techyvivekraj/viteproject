@@ -10,15 +10,12 @@ import { MantineProvider } from '@mantine/core'
 
 createRoot(document.getElementById('root')).render(
   // <StrictMode>
-    <Provider store={store}>
-      
-    {/* <Login /> */}
+  <Provider store={store}>
     <MantineProvider>
-    <Router>
-    <Navigator />
-
-    </Router>
+      <Router>
+        <Navigator />
+      </Router>
     </MantineProvider>
-    </Provider>
+  </Provider>
   // </StrictMode>,
 )

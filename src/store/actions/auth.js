@@ -1,3 +1,4 @@
+import { axiosInstance,showToast } from '../../components/api';
 import {
     logout,
     setError,
@@ -5,17 +6,14 @@ import {
     setRegistered,
     setUser
 } from '../slices/authSlice';
-import { axiosInstance, showToast } from '../../components/api/api';
 
 export const loginUser = (email, password) => async (dispatch) => {
     try {
-        console.log(email, password);
         dispatch(setLoading(true));
         const response = await axiosInstance.post('/login', { email, password });
         const user = response.data;
 
     const expirationTime = user.expirationTime;
-    console.log(expirationTime);
         localStorage.setItem('auth_token', user.token);
         localStorage.setItem('expiration_time', expirationTime);
         localStorage.setItem('uid', user.data.id);

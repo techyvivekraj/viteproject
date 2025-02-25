@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectIsLoading, selectIsRegistered, selectUser } from '../../store/slices/authSlice';
 import '../../styles/index.css'
+import { loginUser, registerUser } from '../../store/actions/auth';
 
 export default function Login(props) {
   const [type, toggle] = useToggle(['login', 'register']);
@@ -56,9 +57,9 @@ export default function Login(props) {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user =useSelector(selectUser);
-  const isRegistered =useSelector(selectIsRegistered);
-  const isLoading =useSelector(selectIsLoading);
+  const user = useSelector(selectUser);
+  const isRegistered = useSelector(selectIsRegistered);
+  const isLoading = useSelector(selectIsLoading);
 
   const toggleType = useCallback(() => toggle(), [toggle]);
 
@@ -160,8 +161,8 @@ export default function Login(props) {
                   : "Don't have an account? Register"}
               </Anchor>
               <Button type="submit" loading={isLoading} loaderProps={{ type: 'dots' }}>
-  {upperFirst(type)}
-</Button>
+                {upperFirst(type)}
+              </Button>
 
             </Group>
           </form>
