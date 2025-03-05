@@ -7,11 +7,13 @@ import '@mantine/core/styles.css';
 
 import { BrowserRouter as Router, } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core'
+import { ToastContainer } from 'react-toastify';
 
 createRoot(document.getElementById('root')).render(
   // <StrictMode>
   <Provider store={store}>
     <MantineProvider>
+    <ToastContainer position="top-center" autoClose={2000} hideProgressBar />
       <Router>
         <Navigator />
       </Router>

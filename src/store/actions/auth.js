@@ -1,4 +1,4 @@
-import { axiosInstance,showToast } from '../../components/api';
+import { axiosInstance,showError,showToast } from '../../components/api';
 import {
     logout,
     setError,
@@ -10,23 +10,28 @@ import {
 export const loginUser = (email, password) => async (dispatch) => {
     try {
         dispatch(setLoading(true));
-        const response = await axiosInstance.post('/login', { email, password });
-        const user = response.data;
+        const response = await axiosInstance.post('/auth/login', { email, password });
+        
+        // Check if the response was successful
 
-    const expirationTime = user.expirationTime;
-        localStorage.setItem('auth_token', user.token);
-        localStorage.setItem('expiration_time', expirationTime);
-        localStorage.setItem('uid', user.data.id);
-        localStorage.setItem('orgId', user.data.orgId);
+        const { data } = response.data;
+        // Store auth data
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('expiration_time', data.expiresIn);
+        localStorage.setItem('uid', data.user.id);
+        localStorage.setItem('orgId', data.user.organization_id);
+        
+        // Update user state
         dispatch(setUser({
-            uid: user.data.id,
-            email: user.data.email
+            uid: data.user.id,
+            email: data.user.email,
+            role: data.user.role,
+            organizationId: data.user.organization_id
         }));
 
-        //store in cookies
+        showToast('Logged in successfully!');
     } catch (error) {
-        console.log(error);
-        dispatch(setError(error.message));
+        // console.error('Login error:', error);
     } finally {
         dispatch(setLoading(false));
     }
@@ -35,25 +40,40 @@ export const loginUser = (email, password) => async (dispatch) => {
 export const registerUser = (ownerName, email, mobile, password, organizationName,) => async (dispatch) => {
     dispatch(setLoading(true));
     try {
-        // Make an API call to register the user
-        const response = await axiosInstance.post('/register', {
-            'ownerName': ownerName,
-            'email': email,
-            'mobile': mobile,
-            'password': password,
-            'orgName': organizationName,
-            'orgEmail': email,
-            'orgMobile': mobile,
+        const response = await axiosInstance.post('/auth/register', {
+            name: ownerName,
+            email: email,
+            password: password,
+            organizationName: organizationName,
+            organizationDomain: null // optional domain
         });
 
-        const user = response.data;
+        if (!response.data.success) {
+            throw new Error(response.data.errors?.[0]?.msg || 'Registration failed');
+        }
+
+        const { data } = response.data;
         dispatch(setRegistered(true));
-        showToast('Registered successfully! Verification email sent.');
-        localStorage.setItem('uid', user.data.id);
-        localStorage.setItem('orgId', user.data.orgId);
+        showToast('Registered successfully!', 'success');
+        localStorage.setItem('uid', data.id);
+        localStorage.setItem('orgId', data.organization_id);
     } catch (error) {
-        dispatch(setError(error.message));
+        console.error('Registration error:', error);
+        let errorMessage;
         
+        if (error.response) {
+            if (error.response.status === 409) {
+                errorMessage = 'User already exists with this email.';
+            } else {
+                errorMessage = error.response.data?.errors?.[0]?.msg || 'Registration failed. Please try again.';
+            }
+        } else if (error.request) {
+            errorMessage = 'No response from server. Please check your internet connection.';
+        } else {
+            errorMessage = error.message || 'An error occurred during registration';
+        }
+        
+        dispatch(setError(errorMessage));
     } finally {
         dispatch(setLoading(false));
     }

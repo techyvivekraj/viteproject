@@ -11,7 +11,6 @@ export const axiosInstance = axios.create({
     }
     
 });
-console.log(API_URL)
 axiosInstance.interceptors.request.use(
     (config) => {
         const authToken = localStorage.getItem('auth_token');
@@ -27,18 +26,60 @@ axiosInstance.interceptors.request.use(
 
 const handleError = (error) => {
     let errorMessage = 'An unknown error occurred.';
+    
     if (error.response) {
-        errorMessage = error.response.data?.message || errorMessage;
-        if (error.response.status === 403) {
-            toast.error('Your session has expired. Please log in again.');
-            localStorage.clear();
-            window.location.href = '/login';
+        // Get the error message from response if available
+        errorMessage = error.response.data?.message || 
+                      error.response.data?.errors?.[0]?.msg ||
+                      errorMessage;
+
+        // Handle different status codes
+        switch (error.response.status) {
+            case 400:
+                errorMessage = errorMessage || 'Invalid request. Please check your data.';
+                break;
+            case 401:
+                errorMessage = 'Unauthorized. Please log in.';
+                localStorage.clear();
+                // window.location.href = '/login';
+                break;
+            case 403:
+                errorMessage = 'Your session has expired. Please log in again.';
+                localStorage.clear();
+                window.location.href = '/login';
+                break;
+            case 404:
+                errorMessage = errorMessage || 'Resource not found.';
+                break;
+            case 409:
+                errorMessage = errorMessage || 'Conflict with existing data.';
+                break;
+            case 422:
+                errorMessage = errorMessage || 'Validation error. Please check your input.';
+                break;
+            case 429:
+                errorMessage = 'Too many requests. Please try again later.';
+                break;
+            case 500:
+                errorMessage = 'Internal server error. Please try again later.';
+                break;
+            case 503:
+                errorMessage = 'Service unavailable. Please try again later.';
+                break;
+            default:
+                if (error.response.status >= 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                }
+                break;
         }
     } else if (error.request) {
-        errorMessage = 'No response received from the server.';
+        errorMessage = 'No response received from the server. Please check your internet connection.';
+    } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Request timed out. Please try again.';
     } else {
-        errorMessage = error.message;
+        errorMessage = error.message || errorMessage;
     }
+    
     return errorMessage;
 };
 axiosInstance.interceptors.response.use(
