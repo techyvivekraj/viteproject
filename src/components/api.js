@@ -9,7 +9,9 @@ export const axiosInstance = axios.create({
     headers: {
         'Content-Type': 'application/json',
     }
+    
 });
+console.log(API_URL)
 axiosInstance.interceptors.request.use(
     (config) => {
         const authToken = localStorage.getItem('auth_token');
