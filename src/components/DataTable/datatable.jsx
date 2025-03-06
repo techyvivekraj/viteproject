@@ -10,10 +10,27 @@ import {
     Table,
     Text,
     TextInput,
+    Stack,
+    Center,
 } from "@mantine/core";
-import { IconPencil, IconPlus, IconTrash, IconArrowUp, IconArrowDown, IconEye } from "@tabler/icons-react";
+import { IconPencil, IconPlus, IconTrash, IconArrowUp, IconArrowDown, IconEye, IconDatabaseOff } from "@tabler/icons-react";
 import { MonthPickerInput } from "@mantine/dates"; // Import MonthPickerInput
 import { useMemo, useState } from "react";
+
+// Add NoData component
+const NoData = () => (
+    <Center p={50}>
+        <Stack align="center" spacing="md">
+            <IconDatabaseOff size={50} color="gray" opacity={0.5} />
+            <Text size="lg" color="dimmed" align="center">
+                No data available
+            </Text>
+            <Text size="sm" color="dimmed" align="center">
+                There are no records to display at the moment
+            </Text>
+        </Stack>
+    </Center>
+);
 
 const DataTable = ({
     title,
@@ -29,8 +46,6 @@ const DataTable = ({
     onMonthClear,
     monthPickerPlaceholder,
     hideMonthPicker,
-    loading,
-    error
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
@@ -168,6 +183,8 @@ const DataTable = ({
                     <Box style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '20px' }}>
                         <Loader />
                     </Box>
+                ) : sortedData.length === 0 ? (
+                    <NoData />
                 ) : (
                     <Table verticalSpacing="sm" highlightOnHover>
                         <Table.Thead>
@@ -186,20 +203,22 @@ const DataTable = ({
                                         </Group>
                                     </Table.Th>
                                 ))}
-                                {/* Add the "Action" column */}
                                 <Table.Th>Action</Table.Th>
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>{rows}</Table.Tbody>
-                    </Table>)}
+                    </Table>
+                )}
             </Table.ScrollContainer>
-            <Group position="apart" mt="md">
-                <Pagination
-                    page={page}
-                    onChange={setPage}
-                    total={Math.ceil(sortedData.length / itemsPerPage)}
-                />
-            </Group>
+            {sortedData.length > 0 && (
+                <Group position="apart" mt="md">
+                    <Pagination
+                        page={page}
+                        onChange={setPage}
+                        total={Math.ceil(sortedData.length / itemsPerPage)}
+                    />
+                </Group>
+            )}
         </Box>
     );
 };

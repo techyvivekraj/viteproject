@@ -16,67 +16,64 @@ import { MantineLogo } from '@mantinex/mantine-logo';
 import { useCallback, useEffect, useMemo, } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { selectIsLoading, selectIsRegistered, selectUser } from '../../store/slices/authSlice';
+import { selectIsLoading, selectIsRegistered, selectUser, selectError, clearError, resetRegistered } from '../../store/slices/authSlice';
 import '../../styles/index.css'
 import { loginUser, registerUser } from '../../store/actions/auth';
 
 export default function Login(props) {
   const [type, toggle] = useToggle(['login', 'register']);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
+  const user = useSelector(selectUser);
+  const isRegistered = useSelector(selectIsRegistered);
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
 
   const form = useForm({
     initialValues: {
       ownerName: '',
       email: '',
       mobile: '',
-      name: '',
       password: '',
       terms: true,
       confirmPassword: '',
       organizationName: '',
     },
-    validate: (values) => {
-      const errors = {};
-      if (!/^\S+@\S+$/.test(values.email)) {
-        errors.email = 'Invalid email';
-      }
-      if (values.password.length < 8) {
-        errors.password = 'Password should include at least 8 characters';
-      }
-      if (type === 'register' && !/^\d{10}$/.test(values.mobile)) {
-        errors.mobile = 'Mobile number must be exactly 10 digits';
-      }
-      if (type === 'register' && values.confirmPassword !== values.password) {
-        errors.confirmPassword = 'Passwords do not match';
-      }
-      if (type === 'register' && !values.terms) {
-        errors.terms = 'You must agree to the terms and conditions';
-      }
-      return errors;
+    validate: {
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      password: (value) => (value.length < 8 ? 'Password should include at least 8 characters' : null),
+      mobile: (value, values) => 
+        type === 'register' && !/^\d{10}$/.test(value) ? 'Mobile number must be exactly 10 digits' : null,
+      confirmPassword: (value, values) =>
+        type === 'register' && value !== values.password ? 'Passwords do not match' : null,
+      terms: (value, values) =>
+        type === 'register' && !value ? 'You must agree to the terms and conditions' : null,
     },
   });
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const user = useSelector(selectUser);
-  const isRegistered = useSelector(selectIsRegistered);
-  const isLoading = useSelector(selectIsLoading);
-
-  const toggleType = useCallback(() => toggle(), [toggle]);
-
   const handleSubmit = useCallback(async (values) => {
-    const { ownerName, email, mobile, password, organizationName } = values;
+    dispatch(clearError());
     if (type === 'register') {
-      dispatch(registerUser(ownerName, email, mobile, password, organizationName,));
+      dispatch(registerUser(values));
     } else {
-      dispatch(loginUser(email, password));
+      dispatch(loginUser({ email: values.email, password: values.password }));
     }
-  }, [dispatch, type,]);
+  }, [dispatch, type]);
+
+  const toggleType = useCallback(() => {
+    dispatch(clearError());
+    dispatch(resetRegistered());
+    form.reset();
+    toggle();
+  }, [dispatch, toggle, form]);
 
   useEffect(() => {
-    if (user && isLoading === false) {
+    if (user) {
       navigate('/');
     }
-  }, [user, navigate, isLoading]);
+  }, [user, navigate]);
+
   useEffect(() => {
     if (isRegistered) {
       toggleType();
@@ -152,6 +149,11 @@ export default function Login(props) {
       <Container size={420} py={40}>
         <Paper radius="md" p="xl" {...props}>
           <MantineLogo size={30} />
+          {/* {error && (
+            <div style={{ color: 'red', marginTop: '10px' }}>
+              {error.message}
+            </div>
+          )} */}
           <form onSubmit={form.onSubmit(handleSubmit)}>
             {formFields}
             <Group justify="space-between" mt="xl">
@@ -163,7 +165,6 @@ export default function Login(props) {
               <Button type="submit" loading={isLoading} loaderProps={{ type: 'dots' }}>
                 {upperFirst(type)}
               </Button>
-
             </Group>
           </form>
           {/* <Divider label="Or continue with email" labelPosition="center" my="lg" />

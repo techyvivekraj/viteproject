@@ -1,27 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit';
-import {
-  fetchEmployees,
-  addEmployee,
-  updateEmployee,
-  deleteEmployee,
-  fetchEmployeeById
-} from '../actions/employees';
+import { fetchEmployees, addEmployee, updateEmployee, deleteEmployee } from '../actions/employees';
+
+const initialState = {
+  employees: [],
+  loading: false,
+  error: null,
+  lastFetch: null,
+  addEmployeeStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  addEmployeeError: null
+};
 
 const employeesSlice = createSlice({
   name: 'employees',
-  initialState: {
-    employees: [],
-    selectedEmployee: null,
-    loading: false,
-    updating: false,
-    error: null
-  },
+  initialState,
   reducers: {
-    clearError: (state) => {
-      state.error = null;
-    },
-    clearSelectedEmployee: (state) => {
-      state.selectedEmployee = null;
+    resetAddEmployeeStatus: (state) => {
+      state.addEmployeeStatus = 'idle';
+      state.addEmployeeError = null;
     }
   },
   extraReducers: (builder) => {
@@ -32,74 +27,46 @@ const employeesSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchEmployees.fulfilled, (state, action) => {
-        state.loading = false;
         state.employees = action.payload;
+        state.loading = false;
+        state.lastFetch = Date.now();
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Fetch Employee By Id
-      .addCase(fetchEmployeeById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchEmployeeById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.selectedEmployee = action.payload;
-      })
-      .addCase(fetchEmployeeById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
       // Add Employee
       .addCase(addEmployee.pending, (state) => {
-        state.updating = true;
-        state.error = null;
+        state.addEmployeeStatus = 'loading';
+        state.addEmployeeError = null;
       })
-      .addCase(addEmployee.fulfilled, (state) => {
-        state.updating = false;
+      .addCase(addEmployee.fulfilled, (state, action) => {
+        state.employees.push(action.payload);
+        state.addEmployeeStatus = 'succeeded';
       })
       .addCase(addEmployee.rejected, (state, action) => {
-        state.updating = false;
-        state.error = action.payload;
+        state.addEmployeeStatus = 'failed';
+        state.addEmployeeError = action.payload;
       })
       // Update Employee
-      .addCase(updateEmployee.pending, (state) => {
-        state.updating = true;
-        state.error = null;
-      })
       .addCase(updateEmployee.fulfilled, (state, action) => {
-        state.updating = false;
-        state.selectedEmployee = action.payload;
-      })
-      .addCase(updateEmployee.rejected, (state, action) => {
-        state.updating = false;
-        state.error = action.payload;
+        const index = state.employees.findIndex(emp => emp.id === action.payload.id);
+        if (index !== -1) state.employees[index] = action.payload;
       })
       // Delete Employee
-      .addCase(deleteEmployee.pending, (state) => {
-        state.updating = true;
-        state.error = null;
-      })
-      .addCase(deleteEmployee.fulfilled, (state) => {
-        state.updating = false;
-      })
-      .addCase(deleteEmployee.rejected, (state, action) => {
-        state.updating = false;
-        state.error = action.payload;
+      .addCase(deleteEmployee.fulfilled, (state, action) => {
+        state.employees = state.employees.filter(emp => emp.id !== action.payload.id);
       });
   }
 });
 
-// Actions
-export const { clearError, clearSelectedEmployee } = employeesSlice.actions;
+export const { resetAddEmployeeStatus } = employeesSlice.actions;
 
-// Selectors
 export const selectEmployees = (state) => state.employees.employees;
-export const selectSelectedEmployee = (state) => state.employees.selectedEmployee;
 export const selectEmployeesLoading = (state) => state.employees.loading;
-export const selectEmployeesUpdating = (state) => state.employees.updating;
 export const selectEmployeesError = (state) => state.employees.error;
+export const selectLastFetch = (state) => state.employees.lastFetch;
+export const selectAddEmployeeStatus = (state) => state.employees.addEmployeeStatus;
+export const selectAddEmployeeError = (state) => state.employees.addEmployeeError;
 
 export default employeesSlice.reducer;

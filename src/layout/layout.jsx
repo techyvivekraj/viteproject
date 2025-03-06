@@ -6,25 +6,38 @@ import { IconMenu2, IconLogout, IconMoonFilled, IconSun } from '@tabler/icons-re
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar/Sidebar';
 import { Outlet } from 'react-router-dom';
-import { useDispatch, useSelector, } from 'react-redux';
-import { logoutUser } from '../redux/actions/auth';
-import { selectTheme, setColorScheme } from '../redux/slices/themeSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../store/actions/auth';
+import { modals } from '@mantine/modals';
+// import { selectTheme, setColorScheme } from '../redux/slices/themeSlice';
 
 const Layout = () => {
     const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
     const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
-    const colorScheme = useSelector(selectTheme);
-    const dark = colorScheme === 'dark';
+    // const colorScheme = useSelector(selectTheme);
+    // const dark = colorScheme === 'dark';
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
     const handleToggleColorScheme = useCallback(() => {
-        dispatch(setColorScheme(dark ? 'light' : 'dark'));
-    }, [dispatch, dark]);
+        // dispatch(setColorScheme(dark ? 'light' : 'dark'));
+    }, [dispatch]);
     
     const handleLogout = () => {
-        dispatch(logoutUser(navigate));
-        navigate('/login');
+        modals.openConfirmModal({
+            title: 'Confirm Logout',
+            centered: true,
+            children: (
+                <p>Are you sure you want to logout?</p>
+            ),
+            labels: { confirm: 'Logout', cancel: 'Cancel' },
+            confirmProps: { color: 'red' },
+            onConfirm: () => {
+                dispatch(logoutUser()).then(() => {
+                    navigate('/login');
+                });
+            },
+        });
     };
 
     const handleMobileToggle = useCallback(() => {
@@ -59,15 +72,15 @@ const Layout = () => {
                 <Group h="100%" px="md">
                     <ActionIcon
                         variant="outline"
-                        color={dark ? 'yellow' : 'blue'}
+                        // color={dark ? 'yellow' : 'blue'}
                         onClick={handleToggleColorScheme}
                         title="Toggle color scheme"
                     >
-                        {dark ? (
+                        {/* {dark ? (
                             <IconSun style={{ width: 18, height: 18 }} />
-                        ) : (
+                        ) : ( */}
                             <IconMoonFilled style={{ width: 18, height: 18 }} />
-                        )}
+                        {/* )} */}
                     </ActionIcon>
                     <ActionIcon
                         variant="outline"

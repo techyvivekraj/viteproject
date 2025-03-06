@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js';
 
-const SECRET_KEY = process.env.REACT_APP_ENCRYPTION_KEY || 'your-fallback-secret-key';
+const SECRET_KEY = import.meta.env.REACT_APP_ENCRYPTION_KEY;
 
 export const encryptId = (id) => {
   if (!id) return '';

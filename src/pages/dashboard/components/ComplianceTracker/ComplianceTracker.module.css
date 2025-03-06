@@ -1,0 +1,14 @@
+.listItem {
+  transition: background-color 150ms ease;
+  border-radius: var(--mantine-radius-sm);
+  padding: var(--mantine-spacing-xs);
+
+  &:hover {
+    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  }
+}
+
+.urgentSection {
+  border-left: 3px solid var(--mantine-color-red-6);
+  padding-left: var(--mantine-spacing-sm);
+} 

@@ -6,7 +6,7 @@ import authSlice from './slices/authSlice';
 // import assetsSlice from './slices/assetsSlice';
 // import shiftSlice from './slices/shiftSlice';
 // import themeSlice from './slices/themeSlice';
-// import employeesSlice from './slices/employeesSlice';
+import employeesSlice from './slices/employeesSlice';
 // import attendanceReducer from './slices/attendanceSlice';
 // import overtimeReducer from './slices/overtimeSlice';
 // import advanceSlice from './slices/advanceSlice';
@@ -26,7 +26,7 @@ const store = configureStore({
         // roles: rolesSlice,
         // assets: assetsSlice,
         // shifts: shiftSlice,
-        // employees: employeesSlice,
+        employees: employeesSlice,
         // attendance: attendanceReducer,
         // overtime: overtimeReducer,
         // advance: advanceSlice,

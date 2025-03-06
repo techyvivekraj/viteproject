@@ -1,9 +1,12 @@
 import { Route, Routes } from 'react-router-dom';
 import Login from './pages/login/login';
+import Dashboard from './pages/dashboard/dashboard';
 // import Dashboard from '../features/dashboard/dashboard';
-// import Layout from '../layout/layout';
+import Layout from './layout/layout';
 // import Employee from '../features/employee/employee';
-// import ProtectedRoute from './PrivateRoute';
+import ProtectedRoute from './components/privateRoiute';
+import Employees from './pages/employees/employees';
+import AddEmployee from './pages/employees/add_employee';
 // import Organisation from '../features/organisation/organisation';
 // import Expense from '../features/expense/expense';
 // import Payroll from '../features/payroll/payroll';
@@ -21,12 +24,12 @@ const Navigator = () => {
   return (
     
       <Routes>
-        <Route path="/" element={<Login />} />
-        {/* <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
-          <Route path="employees" element={<Employee />} />
+          <Route path="employees" element={<Employees />} />
           <Route path="employee/add" element={<AddEmployee />} />
-          <Route path="attendance" element={<Attendance />} />
+           {/*<Route path="attendance" element={<Attendance />} />
           <Route path="overtime" element={<Overtime />} />
           <Route path="advance" element={<Advance />} />
           <Route path="fines" element={<Fines />} />
@@ -37,8 +40,8 @@ const Navigator = () => {
           <Route path="ticket" element={<Ticket />} />
           <Route path="organisation" element={<Organisation />} />
           <Route path="employees/view/:id" element={<ViewEmployee />} />
-          <Route path="/overtime/employee/:employeeId" element={<EmployeeOvertime />} />
-        </Route> */}
+          <Route path="/overtime/employee/:employeeId" element={<EmployeeOvertime />} /> */}
+        </Route>
       </Routes>
   );
 };

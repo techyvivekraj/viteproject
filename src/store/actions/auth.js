@@ -1,115 +1,103 @@
-import { axiosInstance,showError,showToast } from '../../components/api';
-import {
-    logout,
-    setError,
-    setLoading,
-    setRegistered,
-    setUser
-} from '../slices/authSlice';
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import { axiosInstance } from '../../components/api';
 
-export const loginUser = (email, password) => async (dispatch) => {
-    try {
-        dispatch(setLoading(true));
-        const response = await axiosInstance.post('/auth/login', { email, password });
-        
-        // Check if the response was successful
-
-        const { data } = response.data;
-        // Store auth data
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('expiration_time', data.expiresIn);
-        localStorage.setItem('uid', data.user.id);
-        localStorage.setItem('orgId', data.user.organization_id);
-        
-        // Update user state
-        dispatch(setUser({
-            uid: data.user.id,
-            email: data.user.email,
-            role: data.user.role,
-            organizationId: data.user.organization_id
-        }));
-
-        showToast('Logged in successfully!');
-    } catch (error) {
-        // console.error('Login error:', error);
-    } finally {
-        dispatch(setLoading(false));
-    }
+// Helper function for error handling
+const handleError = (error) => {
+    const errorMessage = error.response?.data?.errors?.[0]?.msg || error.message;
+    return {
+        message: errorMessage,
+        statusCode: error.response?.status || 500,
+        errors: error.response?.data?.errors || []
+    };
 };
 
-export const registerUser = (ownerName, email, mobile, password, organizationName,) => async (dispatch) => {
-    dispatch(setLoading(true));
-    try {
-        const response = await axiosInstance.post('/auth/register', {
-            name: ownerName,
-            email: email,
-            password: password,
-            organizationName: organizationName,
-            organizationDomain: null // optional domain
-        });
+export const loginUser = createAsyncThunk(
+    'auth/login',
+    async ({ email, password }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post('/auth/login', { email, password });
+            const { data } = response.data;
 
-        if (!response.data.success) {
-            throw new Error(response.data.errors?.[0]?.msg || 'Registration failed');
+            // Store auth data
+            localStorage.setItem('auth_token', data.token);
+            localStorage.setItem('expiration_time', data.expiresIn);
+            localStorage.setItem('uid', data.user.id);
+            localStorage.setItem('orgId', data.user.organization_id);
+
+            return {
+                uid: data.user.id,
+                email: data.user.email,
+                role: data.user.role,
+                organizationId: data.user.organization_id
+            };
+        } catch (error) {
+            return rejectWithValue(handleError(error));
         }
+    }
+);
 
-        const { data } = response.data;
-        dispatch(setRegistered(true));
-        showToast('Registered successfully!', 'success');
-        localStorage.setItem('uid', data.id);
-        localStorage.setItem('orgId', data.organization_id);
-    } catch (error) {
-        console.error('Registration error:', error);
-        let errorMessage;
-        
-        if (error.response) {
-            if (error.response.status === 409) {
+export const registerUser = createAsyncThunk(
+    'auth/register',
+    async ({ ownerName, email, mobile, password, organizationName }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post('/auth/register', {
+                name: ownerName,
+                email,
+                password,
+                organizationName,
+                mobile
+            });
+
+            if (!response.data.success) {
+                throw new Error(response.data.errors?.[0]?.msg || 'Registration failed');
+            }
+
+            const { data } = response.data;
+            localStorage.setItem('uid', data.id);
+            localStorage.setItem('orgId', data.organization_id);
+            
+            return data;
+        } catch (error) {
+            let errorMessage;
+            if (error.response?.status === 409) {
                 errorMessage = 'User already exists with this email.';
             } else {
-                errorMessage = error.response.data?.errors?.[0]?.msg || 'Registration failed. Please try again.';
+                errorMessage = error.response?.data?.errors?.[0]?.msg || 'Registration failed. Please try again.';
             }
-        } else if (error.request) {
-            errorMessage = 'No response from server. Please check your internet connection.';
-        } else {
-            errorMessage = error.message || 'An error occurred during registration';
+            return rejectWithValue({ message: errorMessage });
         }
-        
-        dispatch(setError(errorMessage));
-    } finally {
-        dispatch(setLoading(false));
     }
-};
+);
 
-export const logoutUser = () => async (dispatch) => {
-    try {
-        localStorage.clear();
-        dispatch(logout());
-        showToast('Logged out successfully!');
-    } catch (error) {
-        dispatch(setError(error.message));
-        
-    }
-};
+export const validateUser = createAsyncThunk(
+    'auth/validate',
+    async (_, { rejectWithValue }) => {
+        try {
+            const uid = localStorage.getItem('uid');
+            if (!uid) {
+                throw new Error('No user ID found');
+            }
 
-export const listenToAuthChanges = () => async (dispatch) => {
-    dispatch(setLoading(true));
+            const response = await axiosInstance.post('/validateUser', { uid });
+            if (!response.data || String(response.data.uid) !== String(uid)) {
+                throw new Error('Invalid user session');
+            }
 
-    try {
-        const uid = localStorage.getItem('uid');
-        if (!uid) {
-            dispatch(logoutUser());
-            return;
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(handleError(error));
         }
-
-        const response = await axiosInstance.post('/validateUser', { 'uid': uid });
-
-        if (!response.data || String(response.data.uid) !== String(uid)) {
-            dispatch(logoutUser());
-        }
-
-    } catch (error) {
-        dispatch(logoutUser());
-        dispatch(setError(error.message));
-    } finally {
-        dispatch(setLoading(false));
     }
-};
+);
+
+export const logoutUser = createAsyncThunk(
+    'auth/logout',
+    async (_, { rejectWithValue }) => {
+        try {
+            localStorage.clear();
+            return null;
+        } catch (error) {
+            return rejectWithValue(handleError(error));
+        }
+    }
+);

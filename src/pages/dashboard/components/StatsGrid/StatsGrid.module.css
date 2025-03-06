@@ -1,0 +1,23 @@
+.root {
+  padding: var(--mantine-spacing-md);
+}
+
+.value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.diff {
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.icon {
+  color: var(--mantine-color-gray-4);
+} 

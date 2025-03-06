@@ -1,0 +1,16 @@
+.departmentCard {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mantine-shadow-md);
+  }
+}
+
+.trendIcon {
+  transition: transform 150ms ease;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+} 

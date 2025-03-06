@@ -11,6 +11,7 @@ export const axiosInstance = axios.create({
     }
     
 });
+console.log(API_URL);
 axiosInstance.interceptors.request.use(
     (config) => {
         const authToken = localStorage.getItem('auth_token');
@@ -39,12 +40,12 @@ const handleError = (error) => {
                 errorMessage = errorMessage || 'Invalid request. Please check your data.';
                 break;
             case 401:
-                errorMessage = 'Unauthorized. Please log in.';
+                errorMessage =  errorMessage ||'Unauthorized. Please log in.';
                 localStorage.clear();
-                // window.location.href = '/login';
+                window.location.href = '/login';
                 break;
             case 403:
-                errorMessage = 'Your session has expired. Please log in again.';
+                errorMessage =  errorMessage ||'Your session has expired. Please log in again.';
                 localStorage.clear();
                 window.location.href = '/login';
                 break;
@@ -58,7 +59,7 @@ const handleError = (error) => {
                 errorMessage = errorMessage || 'Validation error. Please check your input.';
                 break;
             case 429:
-                errorMessage = 'Too many requests. Please try again later.';
+                errorMessage =  errorMessage ||'Too many requests. Please try again later.';
                 break;
             case 500:
                 errorMessage = 'Internal server error. Please try again later.';

@@ -1,0 +1,17 @@
+.stageItem {
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  }
+}
+
+.positionCard {
+  transition: transform 150ms ease;
+
+  &:hover {
+    transform: translateX(5px);
+  }
+} 
