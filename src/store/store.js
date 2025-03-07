@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authSlice from './slices/authSlice';
-// import orgSlice from './slices/orgSlice';
+import deptSlice from './slices/organisation/deptSlice';
 // import networkSlice from './slices/networkSlice';
-// import rolesSlice from './slices/rolesSlice';
-// import assetsSlice from './slices/assetsSlice';
+import assetsSlice from './slices/organisation/assetsSlice';
 // import shiftSlice from './slices/shiftSlice';
 // import themeSlice from './slices/themeSlice';
 import employeesSlice from './slices/employeesSlice';
+import holidaySlice from './slices/organisation/holidaySlice';
+import rolesSlice from './slices/organisation/rolesSlice';
+import shiftSlice from './slices/organisation/shiftSlice';
 // import attendanceReducer from './slices/attendanceSlice';
 // import overtimeReducer from './slices/overtimeSlice';
 // import advanceSlice from './slices/advanceSlice';
@@ -14,19 +16,20 @@ import employeesSlice from './slices/employeesSlice';
 // import remarkSlice from './slices/remarkSlice';
 // import expensesSlice from './slices/expensesSlice';
 // import dashboardReducer from './slices/dashboardSlice';
-// import holidayReducer from './slices/holidaySlice';
+// import holidaySlice from './slices/holidaySlice';
 // import leavesSlice from './slices/leavesSlice';
 
 const store = configureStore({
     reducer: {
         auth: authSlice,
-        // theme: themeSlice,
-        // organization: orgSlice,
-        // network: networkSlice,
-        // roles: rolesSlice,
-        // assets: assetsSlice,
-        // shifts: shiftSlice,
+        departments: deptSlice,
+        assets: assetsSlice,
         employees: employeesSlice,
+        holidays: holidaySlice,
+        roles: rolesSlice,
+        shifts: shiftSlice,
+        // theme: themeSlice,
+        // network: networkSlice,
         // attendance: attendanceReducer,
         // overtime: overtimeReducer,
         // advance: advanceSlice,
@@ -34,7 +37,6 @@ const store = configureStore({
         // remark: remarkSlice,
         // expenses:expensesSlice,
         // dashboard: dashboardReducer,
-        // holidays: holidayReducer,
         // leaves: leavesSlice,
     },
 });

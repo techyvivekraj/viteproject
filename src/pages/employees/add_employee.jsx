@@ -44,11 +44,11 @@ const AddEmployee = () => {
     { value: 'AB-', label: 'AB-' },
   ];
 
-  const salaryTypes = [
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'daily', label: 'Daily' },
-    { value: 'hourly', label: 'Hourly' },
-  ];
+  // const salaryTypes = [
+  //   { value: 'monthly', label: 'Monthly' },
+  //   { value: 'daily', label: 'Daily' },
+  //   { value: 'hourly', label: 'Hourly' },
+  // ];
 
   const countries = [
     { value: 'IN', label: 'India' },
@@ -99,14 +99,14 @@ const AddEmployee = () => {
     { value: 'WB', label: 'West Bengal' }
   ];
 
-  const initialFormValues = {
-    // ... other initial values ...
-    country: 'IN', // Set India as default
-    // ... rest of the values
-  };
+  // const initialFormValues = {
+  //   // ... other initial values ...
+  //   country: 'IN', // Set India as default
+  //   // ... rest of the values
+  // };
 
   return (
-    <Paper radius="md" p="lg" m={{ sm: 'xl' }}>
+    <Paper radius="md" p="lg" m={{ sm: 'xs' }}>
       <Title order={2} size="h3" mb="md">Add Employee</Title>
       
       {/* Required Fields Section */}

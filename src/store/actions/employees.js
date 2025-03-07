@@ -4,9 +4,8 @@ import { axiosInstance } from '../../components/api';
 // Fetch Employees
 export const fetchEmployees = createAsyncThunk(
   'employees/fetchEmployees',
-  async (_, { rejectWithValue }) => {
+  async (organizationId, { rejectWithValue }) => {
     try {
-      const organizationId = 1;
       const response = await axiosInstance.get('/employees',{
         organizationId
       });

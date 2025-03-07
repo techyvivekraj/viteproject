@@ -13,6 +13,8 @@ import {
 } from '../store/slices/employeesSlice';
 
 export const useEmployee = () => {
+  
+  const organizationId = localStorage.getItem('orgId');
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // const [employeeToDelete, setEmployeeToDelete] = useState(null);
@@ -25,9 +27,9 @@ export const useEmployee = () => {
 
   useEffect(() => {
     if (!lastFetch || Date.now() - lastFetch > 300000) {
-      dispatch(fetchEmployees());
+      dispatch(fetchEmployees(organizationId));
     }
-  }, [dispatch, lastFetch]);
+  }, [dispatch, lastFetch,organizationId]);
 
   const columns = useMemo(() => [
     { header: 'Employee Code', accessor: 'employee_code' },

@@ -2,13 +2,14 @@ import React, { useCallback } from 'react';
 import { ActionIcon, AppShell, Burger, Group } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { MantineLogo } from '@mantinex/mantine-logo';
-import { IconMenu2, IconLogout, IconMoonFilled, IconSun } from '@tabler/icons-react';
+import { IconMenu2, IconLogout, IconMoonFilled } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar/Sidebar';
 import { Outlet } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { logoutUser } from '../store/actions/auth';
 import { modals } from '@mantine/modals';
+import ErrorBoundary from '../components/ErrorBoundary';
 // import { selectTheme, setColorScheme } from '../redux/slices/themeSlice';
 
 const Layout = () => {
@@ -21,7 +22,7 @@ const Layout = () => {
 
     const handleToggleColorScheme = useCallback(() => {
         // dispatch(setColorScheme(dark ? 'light' : 'dark'));
-    }, [dispatch]);
+    }, []);
     
     const handleLogout = () => {
         modals.openConfirmModal({
@@ -95,7 +96,9 @@ const Layout = () => {
                 <Sidebar onMobileClick={handleMobileToggle} />
             </AppShell.Navbar>
             <AppShell.Main>
+            <ErrorBoundary>
                 <Outlet />
+                </ErrorBoundary>
             </AppShell.Main>
         </AppShell>
     );

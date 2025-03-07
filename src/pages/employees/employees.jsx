@@ -1,8 +1,7 @@
 import { memo, useMemo } from 'react';
-import { Paper, Text, Loader, Center } from '@mantine/core';
+import { Paper } from '@mantine/core';
 import DataTable from '../../components/DataTable/datatable';
 import { useEmployee } from '../../hooks/useEmployee';
-import ErrorBoundary from '../../components/ErrorBoundary';
 
 const Employees = () => {
   const { employees, loading, error, columns, handleAddClick, handleViewClick, handleDeleteClick } = useEmployee();
@@ -17,7 +16,6 @@ const Employees = () => {
   // if (error) return <Paper p="md"><Text color="red">Error: {error.message || 'Failed to load employees'}</Text></Paper>;
 
   return (
-    <ErrorBoundary>
       <Paper radius="md" p="lg">
         <DataTable 
           title={'Employees'} 
@@ -32,7 +30,6 @@ const Employees = () => {
           hideMonthPicker={true}
         />
       </Paper>
-    </ErrorBoundary>
   );
 };
 

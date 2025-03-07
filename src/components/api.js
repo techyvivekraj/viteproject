@@ -11,7 +11,6 @@ export const axiosInstance = axios.create({
     }
     
 });
-console.log(API_URL);
 axiosInstance.interceptors.request.use(
     (config) => {
         const authToken = localStorage.getItem('auth_token');
