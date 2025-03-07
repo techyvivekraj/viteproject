@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Modal, TextInput, Button, Group } from '@mantine/core';
 import { IconLoader } from '@tabler/icons-react';
 import { useAddShift } from '../../../hooks/organisation/useAddShift';
+import PropTypes from 'prop-types';
 
 export default function AddShift({ opened, closeModal }) {
     const {
@@ -86,3 +87,8 @@ export default function AddShift({ opened, closeModal }) {
         </Modal>
     );
 }
+
+AddShift.propTypes = {
+    opened: PropTypes.bool.isRequired,
+    closeModal: PropTypes.func.isRequired
+};

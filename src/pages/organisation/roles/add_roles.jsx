@@ -1,6 +1,7 @@
 import { Modal, TextInput, Button, Select } from '@mantine/core';
 import { IconLoader } from '@tabler/icons-react';
 import { useAddRole } from '../../../hooks/organisation/useAddRole';
+import PropTypes from 'prop-types';
 
 export default function AddRoles({ opened, closeModal }) {
     const {
@@ -69,3 +70,8 @@ export default function AddRoles({ opened, closeModal }) {
         </Modal>
     );
 }
+
+AddRoles.propTypes = {
+    opened: PropTypes.bool.isRequired,
+    closeModal: PropTypes.func.isRequired
+};

@@ -56,16 +56,14 @@ export const useAddDepartment = (closeModal) => {
 
     try {
       const departmentDetails = {
-        departmentName: formValues.departmentName,
-        leaves: {
-          casualLeave: formValues.casualLeave || '',
-          sickLeave: formValues.sickLeave || '',
-          earnedLeave: formValues.earnedLeave || '',
-          maternityLeave: formValues.maternityLeave || '',
-          paternityLeave: formValues.paternityLeave || ''
-        },
+        name: formValues.departmentName,
+        organizationId: organizationId,
         noticePeriod: formValues.noticePeriod || '',
-        orgId: organizationId,
+        casualLeave: formValues.casualLeave || '',
+        sickLeave: formValues.sickLeave || '',
+        earnedLeave: formValues.earnedLeave || '',
+        maternityLeave: formValues.maternityLeave || '',
+        paternityLeave: formValues.paternityLeave || ''
       };
       await dispatch(addDepartment(departmentDetails)).unwrap();
       setFormValues(initialFormState);

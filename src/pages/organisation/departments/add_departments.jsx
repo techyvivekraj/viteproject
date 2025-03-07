@@ -1,6 +1,7 @@
 import { Modal, TextInput, Button } from '@mantine/core';
 import { IconLoader } from '@tabler/icons-react';
 import { useAddDepartment } from '../../../hooks/organisation/useAddDepartment';
+import PropTypes from 'prop-types';
 
 export default function AddDepartments({ opened, closeModal }) {
     const {
@@ -100,3 +101,8 @@ export default function AddDepartments({ opened, closeModal }) {
         </Modal>
     );
 }
+
+AddDepartments.propTypes = {
+    opened: PropTypes.bool.isRequired,
+    closeModal: PropTypes.func.isRequired
+};

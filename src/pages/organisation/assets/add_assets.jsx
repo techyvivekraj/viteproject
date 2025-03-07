@@ -5,6 +5,7 @@ import { IconLoader } from '@tabler/icons-react';
 import { selectDepartments } from '../../../store/slices/organisation/deptSlice';
 import { DateInput } from '@mantine/dates';
 import { useAddAsset } from '../../../hooks/organisation/useAddAsset';
+import PropTypes from 'prop-types';
 
 const assetTypes = [
     { value: 'equipment', label: 'Equipment' },
@@ -139,3 +140,8 @@ export default function AddAsset({ opened, closeModal }) {
         </Modal>
     );
 }
+
+AddAsset.propTypes = {
+    opened: PropTypes.bool.isRequired,
+    closeModal: PropTypes.func.isRequired
+};

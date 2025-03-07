@@ -6,10 +6,10 @@ export const fetchEmployees = createAsyncThunk(
   'employees/fetchEmployees',
   async (organizationId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/employees',{
+      const response = await axiosInstance.get('/employees', {
         organizationId
       });
-      return response.data; 
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Failed to fetch employees');
     }

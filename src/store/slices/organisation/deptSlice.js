@@ -56,6 +56,9 @@ const deptSlice = createSlice({
         state.addDepartmentError = null;
       })
       .addCase(addDepartment.fulfilled, (state, action) => {
+        if (!Array.isArray(state.departments)) {
+          state.departments = [];
+        }
         state.departments.push(action.payload);
         state.addDepartmentStatus = 'succeeded';
       })

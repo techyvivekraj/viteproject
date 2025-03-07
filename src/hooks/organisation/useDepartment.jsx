@@ -50,11 +50,11 @@ export const useDepartment = () => {
       accessor: 'departmentName',
       render: (item) => <Text>{item.departmentName || 'N/A'}</Text>,
     },
-    {
-      header: 'Leave Details',
-      accessor: 'leaves',
-      render: renderLeaveDetails
-    },
+    // {
+    //   header: 'Leave Details',
+    //   accessor: 'leaves',
+    //   render: renderLeaveDetails
+    // },
     {
       header: 'Notice Period',
       accessor: 'noticePeriod',

@@ -7,8 +7,9 @@ export const fetchDepartments = createAsyncThunk(
   async (organizationId, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get('/departments', {
-        params: { organizationId }
+        organizationId
       });
+      console.log(response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Failed to fetch departments');

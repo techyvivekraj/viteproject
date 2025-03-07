@@ -1,6 +1,7 @@
 import { Modal, TextInput, Switch, Button, Textarea } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useAddHoliday } from '../../../hooks/organisation/useAddHoliday';
+import PropTypes from 'prop-types';
 
 export default function AddHoliday({ opened, closeModal }) {
     const {
@@ -60,4 +61,9 @@ export default function AddHoliday({ opened, closeModal }) {
             </Button>
         </Modal>
     );
-} 
+}
+
+AddHoliday.propTypes = {
+    opened: PropTypes.bool.isRequired,
+    closeModal: PropTypes.func.isRequired
+}; 
