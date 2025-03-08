@@ -12,9 +12,17 @@ export const axiosInstance = axios.create({
     
 });
 
-console.log(API_URL)
 axiosInstance.interceptors.request.use(
     (config) => {
+        // Log URL and parameters
+        console.log('Request URL:', config.baseURL + config.url);
+        console.log('Request Method:', config.method.toUpperCase());
+        console.log('Request Parameters:', {
+            params: config.params,  // URL parameters
+            data: config.data,      // Request body
+            headers: config.headers // Request headers
+        });
+
         const authToken = localStorage.getItem('auth_token');
         if (authToken) {
             config.headers['Authorization'] = `Bearer ${authToken}`;

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectLoading } from '../../store/slices/organisation/rolesSlice';
+import { selectLoading, selectAddRoleStatus } from '../../store/slices/organisation/rolesSlice';
 import { selectDepartments } from '../../store/slices/organisation/deptSlice';
 import { addRoles } from '../../store/actions/organisation/roles';
 import { fetchDepartments } from '../../store/actions/organisation/dept';
@@ -22,20 +22,26 @@ const levels = [
 export const useAddRole = (closeModal) => {
   const [formValues, setFormValues] = useState(initialFormState);
   const [errors, setErrors] = useState({});
+  const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   
   const loading = useSelector(selectLoading);
+  const addRoleStatus = useSelector(selectAddRoleStatus);
   const departments = useSelector(selectDepartments);
   
-  // Ensure departmentList is always an array with the correct structure
-  const departmentList = Array.isArray(departments) ? departments.map(dept => ({
-    deptId: dept.id || dept.deptId,
-    departmentName: dept.name || dept.departmentName
-  })) : [];
+  // Enhanced department list with "Add Department" option
+  const departmentList = [
+    ...(Array.isArray(departments?.data) 
+      ? departments.data.map(dept => ({
+          deptId: dept.id,
+          departmentName: dept.name
+        })) 
+      : []),
+    { deptId: 'add_new', departmentName: '+ Add New Department' }
+  ];
 
   const dispatch = useDispatch();
   const organizationId = localStorage.getItem('orgId');
 
-  // Fetch departments when component mounts
   useEffect(() => {
     if (organizationId) {
       dispatch(fetchDepartments(organizationId));
@@ -44,12 +50,16 @@ export const useAddRole = (closeModal) => {
 
   const validate = useCallback(() => {
     const newErrors = {};
-    if (!formValues.roleName) newErrors.roleName = 'Role name is required';
+    if (!formValues.roleName?.trim()) newErrors.roleName = 'Role name is required';
     if (!formValues.deptId) newErrors.deptId = 'Please select a department';
     return newErrors;
   }, [formValues]);
 
   const handleChange = useCallback((field, value) => {
+    if (field === 'deptId' && value === 'add_new') {
+      setShowDepartmentModal(true);
+      return;
+    }
     setFormValues(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
   }, []);
@@ -75,12 +85,23 @@ export const useAddRole = (closeModal) => {
     }
   }, [formValues, validate, organizationId, dispatch, closeModal]);
 
+  // Reset form when successfully added
   useEffect(() => {
-    if (!loading) {
+    if (addRoleStatus === 'succeeded') {
       setFormValues(initialFormState);
       setErrors({});
     }
-  }, [loading]);
+  }, [addRoleStatus]);
+
+  const handleDepartmentModalClose = useCallback(() => {
+    setShowDepartmentModal(false);
+  }, []);
+
+  const handleDepartmentAdded = useCallback((newDepartment) => {
+    dispatch(fetchDepartments(organizationId));
+    setFormValues(prev => ({ ...prev, deptId: String(newDepartment.id) }));
+    setShowDepartmentModal(false);
+  }, [dispatch, organizationId]);
 
   return {
     formValues,
@@ -88,7 +109,10 @@ export const useAddRole = (closeModal) => {
     loading,
     departmentList,
     levels,
+    showDepartmentModal,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    handleDepartmentModalClose,
+    handleDepartmentAdded
   };
 }; 

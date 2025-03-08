@@ -6,9 +6,7 @@ export const fetchDepartments = createAsyncThunk(
   'organisation/fetchDepartments',
   async (organizationId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/departments', {
-        organizationId
-      });
+      const response = await axiosInstance.get(`/departments?organizationId=${organizationId}`);
       console.log(response.data);
       return response.data;
     } catch (error) {

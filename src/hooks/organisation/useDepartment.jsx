@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Text } from '@mantine/core';
 import { 
   selectDepartments, 
+  selectLastFetch, 
   selectLoading 
 } from '../../store/slices/organisation/deptSlice';
 import { fetchDepartments, deleteDepartments } from '../../store/actions/organisation/dept';
@@ -10,14 +11,33 @@ import { fetchDepartments, deleteDepartments } from '../../store/actions/organis
 export const useDepartment = () => {
   const dispatch = useDispatch();
   const organizationId = localStorage.getItem('orgId');
-  const departments = useSelector(selectDepartments || []);
+  const departments = useSelector(selectDepartments);
   const loading = useSelector(selectLoading);
-
+  const lastFetch = useSelector(selectLastFetch);
+  
   useEffect(() => {
-    if (organizationId) {
+    if (!lastFetch || Date.now() - lastFetch > 300000) {
       dispatch(fetchDepartments(organizationId));
     }
-  }, [dispatch, organizationId]);
+  }, [dispatch, lastFetch,organizationId]);
+
+  // Process departments data to match the table structure
+  const processedDepartments = useMemo(() => {
+    if (!Array.isArray(departments?.data)) return [];
+    
+    return departments.data.map(dept => ({
+      id: dept.id,
+      departmentName: dept.name,
+      noticePeriod: dept.noticePeriod || 0,
+      leaves: {
+        casualLeave: dept.casualLeave || 0,
+        sickLeave: dept.sickLeave || 0,
+        earnedLeave: dept.earnedLeave || 0,
+        maternityLeave: dept.maternityLeave || 0,
+        paternityLeave: dept.paternityLeave || 0
+      }
+    }));
+  }, [departments]);
 
   const renderLeaveDetails = useCallback((item) => {
     const leaveTypes = [
@@ -50,11 +70,11 @@ export const useDepartment = () => {
       accessor: 'departmentName',
       render: (item) => <Text>{item.departmentName || 'N/A'}</Text>,
     },
-    // {
-    //   header: 'Leave Details',
-    //   accessor: 'leaves',
-    //   render: renderLeaveDetails
-    // },
+    {
+      header: 'Leave Details',
+      accessor: 'leaves',
+      render: renderLeaveDetails
+    },
     {
       header: 'Notice Period',
       accessor: 'noticePeriod',
@@ -62,12 +82,18 @@ export const useDepartment = () => {
     },
   ], [renderLeaveDetails]);
 
-  const handleDelete = useCallback((deptId) => {
-    dispatch(deleteDepartments(deptId));
-  }, [dispatch]);
+  const handleDelete = useCallback(async (deptId) => {
+    try {
+      await dispatch(deleteDepartments({ id: deptId, organizationId })).unwrap();
+      // Refresh departments list after successful deletion
+      dispatch(fetchDepartments(organizationId));
+    } catch (error) {
+      console.error('Failed to delete department:', error);
+    }
+  }, [dispatch, organizationId]);
 
   return {
-    departments,
+    departments: processedDepartments,
     loading,
     columns,
     handleDelete

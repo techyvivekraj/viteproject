@@ -9,7 +9,7 @@ import {
 } from '../../actions/organisation/dept';
 
 const initialState = {
-  departments: [],
+  departments: null,  // Changed from [] to null to better handle initial state
   organizationDetails: null,
   loading: false,
   error: null,
@@ -41,13 +41,16 @@ const deptSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchDepartments.fulfilled, (state, action) => {
+        // Store the complete API response
         state.departments = action.payload;
         state.loading = false;
         state.lastFetch = Date.now();
+        state.error = null;
       })
       .addCase(fetchDepartments.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.departments = null;
       })
 
       // Add Department
@@ -56,10 +59,9 @@ const deptSlice = createSlice({
         state.addDepartmentError = null;
       })
       .addCase(addDepartment.fulfilled, (state, action) => {
-        if (!Array.isArray(state.departments)) {
-          state.departments = [];
+        if (state.departments?.data && Array.isArray(state.departments.data)) {
+          state.departments.data.push(action.payload.data);
         }
-        state.departments.push(action.payload);
         state.addDepartmentStatus = 'succeeded';
       })
       .addCase(addDepartment.rejected, (state, action) => {
@@ -73,9 +75,11 @@ const deptSlice = createSlice({
         state.updateError = null;
       })
       .addCase(updateDepartment.fulfilled, (state, action) => {
-        const index = state.departments.findIndex(departments => departments.id === action.payload.id);
-        if (index !== -1) {
-          state.departments[index] = action.payload;
+        if (state.departments?.data && Array.isArray(state.departments.data)) {
+          const index = state.departments.data.findIndex(dept => dept.id === action.payload.data.id);
+          if (index !== -1) {
+            state.departments.data[index] = action.payload.data;
+          }
         }
         state.updateStatus = 'succeeded';
       })
@@ -86,7 +90,11 @@ const deptSlice = createSlice({
 
       // Delete Department
       .addCase(deleteDepartments.fulfilled, (state, action) => {
-        state.departments = state.departments.filter(departments => departments.id !== action.payload.id);
+        if (state.departments?.data && Array.isArray(state.departments.data)) {
+          state.departments.data = state.departments.data.filter(
+            dept => dept.id !== action.payload.id
+          );
+        }
       })
 
       // Fetch Organization Details
