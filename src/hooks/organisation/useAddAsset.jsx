@@ -7,7 +7,7 @@ import {
   selectAddError,
   resetAddStatus 
 } from '../../store/slices/organisation/assetsSlice';
-import { addAsset, fetchAssets } from '../../store/actions/organisation/assets';
+import { addAsset } from '../../store/actions/organisation/assets';
 import { fetchDepartments } from '../../store/actions/organisation/dept';
 import { selectDepartments } from '../../store/slices/organisation/deptSlice';
 

@@ -45,10 +45,10 @@ export const updateShift = createAsyncThunk(
 // Delete Shift
 export const deleteShift = createAsyncThunk(
   'shifts/deleteShift',
-  async ({ shiftId,  }, { rejectWithValue }) => {
+  async ({ id, organizationId }, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/shifts/${shiftId}`);
-      return { shiftId };
+      await axiosInstance.delete(`/shifts/${id}`, { data: { organizationId } });
+      return { id };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Failed to delete shift');
     }

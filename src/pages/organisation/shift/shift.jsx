@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
+import { notifications } from '@mantine/notifications';
 import DataTable from '../../../components/DataTable/datatable';
 import AddShift from './add_shift';
 import { useShift } from '../../../hooks/organisation/useShift';
@@ -9,11 +10,11 @@ import { useShift } from '../../../hooks/organisation/useShift';
 export default function Shift() {
     const [opened, { open, close }] = useDisclosure(false);
     const { shifts, loading, columns, handleDelete } = useShift();
-    
-      const processedData = useMemo(() =>
+
+    const processedData = useMemo(() =>
         Array.isArray(shifts)
-          ? shifts.map(shift => ({ ...shift }))
-          : [],
+            ? shifts.map(shift => ({ ...shift }))
+            : [],
         [shifts]);
 
     const openDeleteModal = useCallback((shiftId) => {
@@ -35,10 +36,19 @@ export default function Shift() {
         });
     }, [handleDelete]);
 
-    const handleEditClick = (item) => {
-        // Implement edit functionality
+    const handleEditClick = useCallback((item) => {
         console.log('Edit:', item);
-    };
+        // Implement edit functionality
+    }, []);
+
+    const handleAddSuccess = useCallback(() => {
+        close();
+        notifications.show({
+            title: 'Success',
+            message: 'Shift added successfully',
+            color: 'green'
+        });
+    }, [close]);
 
     return (
         <div>
@@ -49,12 +59,12 @@ export default function Shift() {
                 searchPlaceholder="Search shifts..."
                 pagination={true}
                 onAddClick={open}
-                onDeleteClick={(item) => openDeleteModal(item.shiftId)}
+                onDeleteClick={(item) => openDeleteModal(item.id)}
                 onEditClick={handleEditClick}
                 isLoading={loading}
                 hideMonthPicker={true}
             />
-            <AddShift opened={opened} closeModal={close} />
+            <AddShift opened={opened} closeModal={close} onSuccess={handleAddSuccess} />
         </div>
     );
 }

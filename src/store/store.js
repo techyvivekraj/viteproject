@@ -7,7 +7,6 @@ import assetsSlice from './slices/organisation/assetsSlice';
 // import themeSlice from './slices/themeSlice';
 import employeesSlice from './slices/employeesSlice';
 import holidaySlice from './slices/organisation/holidaySlice';
-import rolesSlice from './slices/organisation/rolesSlice';
 import shiftSlice from './slices/organisation/shiftSlice';
 import designationSlice from './slices/organisation/designationSlice';
 // import attendanceReducer from './slices/attendanceSlice';
@@ -27,7 +26,6 @@ const store = configureStore({
         assets: assetsSlice,
         employees: employeesSlice,
         holidays: holidaySlice,
-        roles: rolesSlice,
         shifts: shiftSlice,
         designations: designationSlice,
         // theme: themeSlice,

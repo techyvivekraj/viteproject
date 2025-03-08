@@ -9,13 +9,13 @@ import {
 } from '../../actions/organisation/shift';
 
 const initialState = {
-  shifts: [],
+  shifts: null,
   shiftAssignments: {},
   loading: false,
   error: null,
   lastFetch: null,
-  addShiftStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-  addShiftError: null,
+  addStatus: 'idle',
+  addError: null,
   updateStatus: 'idle',
   updateError: null,
   assignmentStatus: 'idle',
@@ -26,9 +26,9 @@ const shiftSlice = createSlice({
   name: 'shifts',
   initialState,
   reducers: {
-    resetAddShiftStatus: (state) => {
-      state.addShiftStatus = 'idle';
-      state.addShiftError = null;
+    resetAddStatus: (state) => {
+      state.addStatus = 'idle';
+      state.addError = null;
     },
     resetUpdateStatus: (state) => {
       state.updateStatus = 'idle';
@@ -58,16 +58,18 @@ const shiftSlice = createSlice({
 
       // Add Shift
       .addCase(addShifts.pending, (state) => {
-        state.addShiftStatus = 'loading';
-        state.addShiftError = null;
+        state.addStatus = 'loading';
+        state.addError = null;
       })
       .addCase(addShifts.fulfilled, (state, action) => {
-        state.shifts.push(action.payload);
-        state.addShiftStatus = 'succeeded';
+        if (state.shifts?.data) {
+          state.shifts.data.push(action.payload.data);
+        }
+        state.addStatus = 'succeeded';
       })
       .addCase(addShifts.rejected, (state, action) => {
-        state.addShiftStatus = 'failed';
-        state.addShiftError = action.payload;
+        state.addStatus = 'failed';
+        state.addError = action.payload;
       })
 
       // Update Shift
@@ -76,9 +78,11 @@ const shiftSlice = createSlice({
         state.updateError = null;
       })
       .addCase(updateShift.fulfilled, (state, action) => {
-        const index = state.shifts.findIndex(shift => shift.shiftId === action.payload.shiftId);
-        if (index !== -1) {
-          state.shifts[index] = action.payload;
+        if (state.shifts?.data) {
+          const index = state.shifts.data.findIndex(shift => shift.id === action.payload.data.id);
+          if (index !== -1) {
+            state.shifts.data[index] = action.payload.data;
+          }
         }
         state.updateStatus = 'succeeded';
       })
@@ -89,10 +93,12 @@ const shiftSlice = createSlice({
 
       // Delete Shift
       .addCase(deleteShift.fulfilled, (state, action) => {
-        state.shifts = state.shifts.filter(shift => shift.shiftId !== action.payload.shiftId);
+        if (state.shifts?.data) {
+          state.shifts.data = state.shifts.data.filter(shift => shift.id !== action.payload.id);
+        }
         // Also remove from assignments if present
-        if (state.shiftAssignments[action.payload.shiftId]) {
-          delete state.shiftAssignments[action.payload.shiftId];
+        if (state.shiftAssignments[action.payload.id]) {
+          delete state.shiftAssignments[action.payload.id];
         }
       })
 
@@ -111,31 +117,13 @@ const shiftSlice = createSlice({
       .addCase(fetchShiftAssignments.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
-
-      // Assign Shift
-      .addCase(assignShift.pending, (state) => {
-        state.assignmentStatus = 'loading';
-        state.assignmentError = null;
-      })
-      .addCase(assignShift.fulfilled, (state, action) => {
-        // Update assignments for the relevant department
-        const { departmentId } = action.meta.arg;
-        if (state.shiftAssignments[departmentId]) {
-          state.shiftAssignments[departmentId] = action.payload;
-        }
-        state.assignmentStatus = 'succeeded';
-      })
-      .addCase(assignShift.rejected, (state, action) => {
-        state.assignmentStatus = 'failed';
-        state.assignmentError = action.payload;
       });
   }
 });
 
 // Export actions
 export const {
-  resetAddShiftStatus,
+  resetAddStatus,
   resetUpdateStatus,
   resetAssignmentStatus
 } = shiftSlice.actions;
@@ -145,10 +133,10 @@ export const selectShifts = (state) => state.shifts.shifts;
 export const selectLoading = (state) => state.shifts.loading;
 export const selectError = (state) => state.shifts.error;
 export const selectLastFetch = (state) => state.shifts.lastFetch;
-export const selectAddShiftStatus = (state) => state.shifts.addShiftStatus;
-export const selectAddShiftError = (state) => state.shifts.addShiftError;
-export const selectUpdateStatus = (state) => state.shifts.updateStatus;
-export const selectUpdateError = (state) => state.shifts.updateError;
+export const selectAddShiftStatus = (state) => state.shifts.addStatus;
+export const selectAddShiftError = (state) => state.shifts.addError;
+export const selectUpdateShiftStatus = (state) => state.shifts.updateStatus;
+export const selectUpdateShiftError = (state) => state.shifts.updateError;
 export const selectShiftAssignments = (departmentId) => (state) => 
   state.shifts.shiftAssignments[departmentId];
 export const selectAssignmentStatus = (state) => state.shifts.assignmentStatus;

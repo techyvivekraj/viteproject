@@ -2,7 +2,7 @@ import { useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { notifications } from '@mantine/notifications';
-import { Text } from '@mantine/core';
+import { Text, Badge } from '@mantine/core';
 import { fetchAssets, deleteAsset } from '../../store/actions/organisation/assets';
 import {
   selectAssets,
@@ -20,52 +20,94 @@ export const useAsset = () => {
   const error = useSelector(selectError);
   const lastFetch = useSelector(selectLastFetch);
 
-  useEffect(() => {
-    if ((!lastFetch || Date.now() - lastFetch > 300000) && organizationId) {
+  const fetchAssetsData = useCallback(() => {
+    if (organizationId) {
       dispatch(fetchAssets(organizationId));
     }
-  }, [dispatch, lastFetch, organizationId]);
+  }, [dispatch, organizationId]);
+
+  useEffect(() => {
+    if (organizationId) {
+      fetchAssetsData();
+    }
+  }, [fetchAssetsData, lastFetch, organizationId]);
 
   const handleDelete = useCallback(async (id) => {
     try {
       await dispatch(deleteAsset({ id, organizationId })).unwrap();
-      notifications.show({
-        title: 'Success',
-        message: 'Asset deleted successfully',
-        color: 'green'
-      });
+      return true;
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: error.message || 'Failed to delete asset',
-        color: 'red'
-      });
+      throw new Error(error.message || 'Failed to delete asset');
     }
   }, [dispatch, organizationId]);
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'green';
+      case 'lost':
+        return 'red';
+      case 'returned':
+        return 'blue';
+      default:
+        return 'gray';
+    }
+  };
+
+  const getConditionColor = (condition) => {
+    switch (condition?.toLowerCase()) {
+      case 'new':
+        return 'green';
+      case 'used':
+        return 'yellow';
+      case 'damaged':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
 
   const columns = useMemo(() => [
     {
       header: 'Asset Name',
       accessor: 'asset_name',
-      render: (item) => <Text>{item.asset_name || 'N/A'}</Text>,
+      render: (item) => (
+        <Text fw={500}>
+          {item.asset_name || 'N/A'}
+        </Text>
+      ),
     },
     {
       header: 'Purchase Date',
       accessor: 'purchase_date',
-      render: (item) => <Text>{item.purchase_date ? new Date(item.purchase_date).toLocaleDateString() : 'N/A'}</Text>,
+      render: (item) => (
+        <Text>
+          {item.purchase_date || 'N/A'}
+        </Text>
+      ),
     },
     {
       header: 'Condition',
       accessor: 'conditionn',
-      render: (item) => <Text>{item.conditionn || 'N/A'}</Text>,
+      render: (item) => (
+        <Badge 
+          color={getConditionColor(item.conditionn)}
+          variant="light"
+        >
+          {item.conditionn || 'N/A'}
+        </Badge>
+      ),
     },
     {
       header: 'Status',
       accessor: 'status',
       render: (item) => (
-        <Text color={item.status === 'active' ? 'green' : item.status === 'lost' ? 'red' : 'orange'}>
+        <Badge 
+          color={getStatusColor(item.status)}
+          variant="filled"
+        >
           {item.status || 'N/A'}
-        </Text>
+        </Badge>
       ),
     },
     {
@@ -93,6 +135,7 @@ export const useAsset = () => {
     handleAddClick,
     handleViewClick,
     handleEditClick,
-    handleDelete
+    handleDelete,
+    fetchAssets: fetchAssetsData
   };
 }; 
