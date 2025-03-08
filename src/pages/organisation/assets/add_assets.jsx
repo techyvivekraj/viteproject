@@ -1,24 +1,18 @@
-import { useEffect } from 'react';
-import { Modal, TextInput, Button, Select } from '@mantine/core';
-import { useSelector } from 'react-redux';
-import { IconLoader } from '@tabler/icons-react';
-import { selectDepartments } from '../../../store/slices/organisation/deptSlice';
+import { Modal, TextInput, Button, Select, Group } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useAddAsset } from '../../../hooks/organisation/useAddAsset';
 import PropTypes from 'prop-types';
-
-const assetTypes = [
-    { value: 'equipment', label: 'Equipment' },
-    { value: 'furniture', label: 'Furniture' },
-    { value: 'vehicle', label: 'Vehicle' },
-    { value: 'technology', label: 'Technology' },
-    { value: 'custom', label: 'Custom' }
-];
 
 const conditions = [
     { value: 'new', label: 'New' },
     { value: 'used', label: 'Used' },
     { value: 'damaged', label: 'Damaged' },
+];
+
+const status = [
+    { value: 'active', label: 'Active' },
+    { value: 'returned', label: 'Returned' },
+    { value: 'lost', label: 'Lost' },
 ];
 
 export default function AddAsset({ opened, closeModal }) {
@@ -27,17 +21,8 @@ export default function AddAsset({ opened, closeModal }) {
         errors,
         loading,
         handleChange,
-        handleSubmit,
-        handleReset
+        handleSubmit
     } = useAddAsset(closeModal);
-
-    const departmentList = useSelector(selectDepartments) || [];
-
-    useEffect(() => {
-        if (!opened) {
-            handleReset();
-        }
-    }, [opened, handleReset]);
 
     return (
         <Modal
@@ -62,54 +47,12 @@ export default function AddAsset({ opened, closeModal }) {
                 pb={10}
             />
 
-            <Select
-                label="Asset Type"
-                placeholder="Select asset type"
-                value={formValues.assetType}
-                onChange={(value) => handleChange('assetType', value)}
-                data={assetTypes}
-                required
-                error={errors.assetType}
-                pb={10}
-            />
-
-            {formValues.assetType === 'custom' && (
-                <TextInput
-                    label="Custom Asset Type"
-                    placeholder="Enter custom asset type"
-                    value={formValues.customAssetType}
-                    onChange={(e) => handleChange('customAssetType', e.currentTarget.value)}
-                    required
-                    error={errors.customAssetType}
-                    pb={10}
-                />
-            )}
-
             <TextInput
-                label="Assigned To (optional)"
-                placeholder="Employee ID (optional)"
+                label="Assigned To (Employee ID)"
+                placeholder="Enter employee ID"
                 value={formValues.assignedTo}
                 onChange={(e) => handleChange('assignedTo', e.currentTarget.value)}
                 error={errors.assignedTo}
-                pb={10}
-            />
-
-            <Select
-                label="Department"
-                placeholder="Select department"
-                value={formValues.departmentId}
-                onChange={(value) => handleChange('departmentId', value)}
-                data={Array.isArray(departmentList) 
-                    ? departmentList
-                        .filter(dep => dep?.deptId && dep?.departmentName)
-                        .map(dep => ({
-                            value: String(dep.deptId),
-                            label: dep.departmentName
-                        }))
-                    : []
-                }
-                required
-                error={errors.departmentId}
                 pb={10}
             />
 
@@ -126,17 +69,31 @@ export default function AddAsset({ opened, closeModal }) {
             <Select
                 label="Condition"
                 placeholder="Select asset condition"
-                value={formValues.conditionn}
-                onChange={(value) => handleChange('conditionn', value)}
+                value={formValues.condition}
+                onChange={(value) => handleChange('condition', value)}
                 data={conditions}
                 required
                 error={errors.condition}
                 pb={10}
             />
 
-            <Button onClick={handleSubmit} mt="md" fullWidth disabled={loading}>
-                {loading ? <IconLoader /> : 'Save'}
-            </Button>
+            <Select
+                label="Status"
+                placeholder="Select asset status"
+                value={formValues.status}
+                onChange={(value) => handleChange('status', value)}
+                data={status}
+                required
+                error={errors.status}
+                pb={10}
+            />
+
+            <Group justify="flex-end" mt="md">
+                <Button variant="light" onClick={closeModal}>Cancel</Button>
+                <Button onClick={handleSubmit} loading={loading}>
+                    Save
+                </Button>
+            </Group>
         </Modal>
     );
 }

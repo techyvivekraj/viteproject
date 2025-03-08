@@ -4,17 +4,17 @@ import { useDisclosure } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import DataTable from '../../../components/DataTable/datatable';
 import AddRoles from './add_roles';
-import { useRole } from '../../../hooks/organisation/useRole';
+import { useDesignation } from '../../../hooks/organisation/useDesignation';
 
 export default function Roles() {
   const [opened, { open, close }] = useDisclosure(false);
-  const { roles, loading, columns, handleDelete } = useRole();
+  const { designations, loading, columns, handleDelete } = useDesignation();
 
   const processedData = useMemo(() =>
-    Array.isArray(roles)
-      ? roles.map(role => ({ ...role }))
+    Array.isArray(designations)
+      ? designations.map(role => ({ ...role }))
       : [],
-    [roles]);
+    [designations]);
 
   const openDeleteModal = useCallback((roleId) => {
     modals.openConfirmModal({
@@ -49,7 +49,7 @@ export default function Roles() {
         searchPlaceholder="Search roles..."
         pagination={true}
         onAddClick={open}
-        onDeleteClick={(item) => openDeleteModal(item.roleId)}
+        onDeleteClick={(item) => openDeleteModal(item.id)}
         onEditClick={handleEditClick}
         isLoading={loading}
         hideMonthPicker={true}

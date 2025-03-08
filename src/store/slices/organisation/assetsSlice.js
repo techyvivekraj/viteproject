@@ -27,9 +27,10 @@ const assetsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAssets.fulfilled, (state, action) => {
-        state.assets = action.payload || [];
+        state.assets = action.payload;
         state.loading = false;
         state.lastFetch = Date.now();
+        state.error = null;
       })
       .addCase(fetchAssets.rejected, (state, action) => {
         state.loading = false;
@@ -41,8 +42,11 @@ const assetsSlice = createSlice({
         state.addAssetError = null;
       })
       .addCase(addAsset.fulfilled, (state, action) => {
-        state.assets.push(action.payload);
+        if (state.assets?.data) {
+          state.assets.data.push(action.payload.data);
+        }
         state.addAssetStatus = 'succeeded';
+        state.addAssetError = null;
       })
       .addCase(addAsset.rejected, (state, action) => {
         state.addAssetStatus = 'failed';
@@ -50,12 +54,18 @@ const assetsSlice = createSlice({
       })
       // Update Asset
       .addCase(updateAsset.fulfilled, (state, action) => {
-        const index = state.assets.findIndex(asset => asset.id === action.payload.id);
-        if (index !== -1) state.assets[index] = action.payload;
+        if (state.assets?.data) {
+          const index = state.assets.data.findIndex(asset => asset.id === action.payload.id);
+          if (index !== -1) {
+            state.assets.data[index] = action.payload;
+          }
+        }
       })
       // Delete Asset
       .addCase(deleteAsset.fulfilled, (state, action) => {
-        state.assets = state.assets.filter(asset => asset.id !== action.payload.id);
+        if (state.assets?.data) {
+          state.assets.data = state.assets.data.filter(asset => asset.id !== action.payload.id);
+        }
       });
   }
 });

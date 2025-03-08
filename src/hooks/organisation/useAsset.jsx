@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { fetchAssets } from '../../store/actions/organisation/assets';
+import { notifications } from '@mantine/notifications';
 import { Text } from '@mantine/core';
+import { fetchAssets, deleteAsset } from '../../store/actions/organisation/assets';
 import {
   selectAssets,
   selectLoading,
@@ -14,8 +15,8 @@ export const useAsset = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const organizationId = localStorage.getItem('orgId');
-  const assets = useSelector(selectAssets) || [];
-  const loading = useSelector(selectLoading) || false;
+  const assets = useSelector(selectAssets);
+  const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
   const lastFetch = useSelector(selectLastFetch);
 
@@ -25,21 +26,33 @@ export const useAsset = () => {
     }
   }, [dispatch, lastFetch, organizationId]);
 
+  const handleDelete = useCallback(async (id) => {
+    try {
+      await dispatch(deleteAsset({ id, organizationId })).unwrap();
+      notifications.show({
+        title: 'Success',
+        message: 'Asset deleted successfully',
+        color: 'green'
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: error.message || 'Failed to delete asset',
+        color: 'red'
+      });
+    }
+  }, [dispatch, organizationId]);
+
   const columns = useMemo(() => [
     {
       header: 'Asset Name',
-      accessor: 'assetName',
-      render: (item) => <Text>{item.assetName || 'N/A'}</Text>,
-    },
-    {
-      header: 'Asset Type',
-      accessor: 'assetType',
-      render: (item) => <Text>{item.assetType || 'N/A'}</Text>,
+      accessor: 'asset_name',
+      render: (item) => <Text>{item.asset_name || 'N/A'}</Text>,
     },
     {
       header: 'Purchase Date',
-      accessor: 'purchaseDate',
-      render: (item) => <Text>{item.purchaseDate ? new Date(item.purchaseDate).toLocaleDateString() : 'N/A'}</Text>,
+      accessor: 'purchase_date',
+      render: (item) => <Text>{item.purchase_date ? new Date(item.purchase_date).toLocaleDateString() : 'N/A'}</Text>,
     },
     {
       header: 'Condition',
@@ -47,15 +60,25 @@ export const useAsset = () => {
       render: (item) => <Text>{item.conditionn || 'N/A'}</Text>,
     },
     {
-      header: 'Assigned To',
-      accessor: 'assignedTo',
-      render: (item) => <Text style={{ color: !item.assignedTo ? 'green' : 'initial' }}>{item.assignedTo || 'Available'}</Text>,
+      header: 'Status',
+      accessor: 'status',
+      render: (item) => (
+        <Text color={item.status === 'active' ? 'green' : item.status === 'lost' ? 'red' : 'orange'}>
+          {item.status || 'N/A'}
+        </Text>
+      ),
     },
     {
-      header: 'Department',
-      accessor: 'departmentName',
-      render: (item) => <Text>{item.departmentName || 'N/A'}</Text>,
-    },
+      header: 'Assigned To',
+      accessor: 'assigned_to',
+      render: (item) => (
+        <Text>
+          {item.first_name && item.last_name 
+            ? `${item.first_name} ${item.last_name}`
+            : 'Not Assigned'}
+        </Text>
+      ),
+    }
   ], []);
 
   const handleAddClick = useCallback(() => navigate('/asset/add'), [navigate]);
@@ -63,12 +86,13 @@ export const useAsset = () => {
   const handleEditClick = useCallback((asset) => navigate(`/assets/edit/${asset.id}`), [navigate]);
 
   return {
-    assets,
+    assets: assets?.data || [],
     loading,
     error,
     columns,
     handleAddClick,
     handleViewClick,
-    handleEditClick
+    handleEditClick,
+    handleDelete
   };
 }; 

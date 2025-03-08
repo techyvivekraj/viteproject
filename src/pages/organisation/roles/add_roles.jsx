@@ -35,31 +35,26 @@ export default function AddRoles({ opened, closeModal }) {
                 <TextInput
                     label="Role Name"
                     placeholder="Enter role name"
-                    value={formValues.roleName}
-                    onChange={(e) => handleChange('roleName', e.currentTarget.value)}
+                    value={formValues.name}
+                    onChange={(e) => handleChange('name', e.currentTarget.value)}
                     required
-                    error={errors.roleName}
+                    error={errors.name}
                     pb={10}
                 />
 
                 <Select
                     label="Select Department"
                     placeholder="Choose a department"
-                    value={formValues.deptId}
-                    onChange={(value) => handleChange('deptId', value)}
-                    data={departmentList?.map((dept) => ({
-                        value: String(dept.deptId),
-                        label: dept.departmentName,
-                        disabled: dept.deptId === 'add_new' && departmentList.length > 1
-                    }))}
+                    value={formValues.departmentId}
+                    onChange={(value) => handleChange('departmentId', value)}
+                    data={departmentList}
                     required
-                    error={errors.deptId}
+                    error={errors.departmentId}
                     pb={10}
-                    searchable
-                    // nothingFound="No departments found"
+                    // searchable
                 />
 
-                <Select
+                {/* <Select
                     label="Select Level (Optional)"
                     placeholder="Choose a Level"
                     value={formValues.levelId}
@@ -70,13 +65,14 @@ export default function AddRoles({ opened, closeModal }) {
                     }))}
                     error={errors.levelId}
                     pb={10}
-                />
+                /> */}
 
                 <Group justify="flex-end" mt="md">
                     <Button variant="light" onClick={closeModal}>Cancel</Button>
-                    <Button onClick={handleSubmit} loading={loading}>
-                        Save
-                    </Button>
+                    
+            <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? <IconLoader /> : 'Save'}
+            </Button>
                 </Group>
             </Modal>
 

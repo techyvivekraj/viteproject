@@ -7,7 +7,7 @@ export const fetchAssets = createAsyncThunk(
   async (organizationId, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get('/assets', {
-        organizationId
+        params: { organizationId }
       });
       return response.data;
     } catch (error) {
@@ -45,9 +45,11 @@ export const updateAsset = createAsyncThunk(
 // Delete Asset
 export const deleteAsset = createAsyncThunk(
   'assets/deleteAsset',
-  async (id, { rejectWithValue }) => {
+  async ({ id, organizationId }, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/assets/${id}`);
+      await axiosInstance.delete(`/assets/${id}`, {
+        data: { organizationId }
+      });
       return { id };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Failed to delete asset');
