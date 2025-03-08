@@ -10,7 +10,6 @@ export default function AddRoles({ opened, closeModal }) {
         errors,
         loading,
         departmentList,
-        levels,
         showDepartmentModal,
         handleChange,
         handleSubmit,

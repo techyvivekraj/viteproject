@@ -6,17 +6,17 @@ const initialState = {
   loading: false,
   error: null,
   lastFetch: null,
-  addAssetStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-  addAssetError: null
+  addStatus: 'idle',  // Changed to match useAddRole pattern
+  addError: null
 };
 
 const assetsSlice = createSlice({
   name: 'assets',
   initialState,
   reducers: {
-    resetAddAssetStatus: (state) => {
-      state.addAssetStatus = 'idle';
-      state.addAssetError = null;
+    resetAddStatus: (state) => {
+      state.addStatus = 'idle';
+      state.addError = null;
     }
   },
   extraReducers: (builder) => {
@@ -38,45 +38,40 @@ const assetsSlice = createSlice({
       })
       // Add Asset
       .addCase(addAsset.pending, (state) => {
-        state.addAssetStatus = 'loading';
-        state.addAssetError = null;
+        state.addStatus = 'loading';
+        state.addError = null;
       })
       .addCase(addAsset.fulfilled, (state, action) => {
-        if (state.assets?.data) {
-          state.assets.data.push(action.payload.data);
-        }
-        state.addAssetStatus = 'succeeded';
-        state.addAssetError = null;
+        state.addStatus = 'succeeded';
+        state.addError = null;
+        // Refresh will happen through fetchAssets
       })
       .addCase(addAsset.rejected, (state, action) => {
-        state.addAssetStatus = 'failed';
-        state.addAssetError = action.payload;
+        state.addStatus = 'failed';
+        state.addError = action.payload;
       })
       // Update Asset
       .addCase(updateAsset.fulfilled, (state, action) => {
-        if (state.assets?.data) {
-          const index = state.assets.data.findIndex(asset => asset.id === action.payload.id);
-          if (index !== -1) {
-            state.assets.data[index] = action.payload;
-          }
+        const index = state.assets.findIndex(asset => asset.id === action.payload.id);
+        if (index !== -1) {
+          state.assets[index] = action.payload;
         }
       })
       // Delete Asset
       .addCase(deleteAsset.fulfilled, (state, action) => {
-        if (state.assets?.data) {
-          state.assets.data = state.assets.data.filter(asset => asset.id !== action.payload.id);
-        }
+        state.assets = state.assets.filter(asset => asset.id !== action.payload.id);
       });
   }
 });
 
-export const { resetAddAssetStatus } = assetsSlice.actions;
+export const { resetAddStatus } = assetsSlice.actions;
 
+// Updated selectors to match useAddRole pattern
 export const selectAssets = (state) => state.assets.assets;
 export const selectLoading = (state) => state.assets.loading;
 export const selectError = (state) => state.assets.error;
 export const selectLastFetch = (state) => state.assets.lastFetch;
-export const selectAddAssetStatus = (state) => state.assets.addAssetStatus;
-export const selectAddAssetError = (state) => state.assets.addAssetError;
+export const selectAddStatus = (state) => state.assets.addStatus;
+export const selectAddError = (state) => state.assets.addError;
 
 export default assetsSlice.reducer; 

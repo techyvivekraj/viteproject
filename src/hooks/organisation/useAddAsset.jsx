@@ -1,15 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { notifications } from '@mantine/notifications';
-import { addAsset } from '../../store/actions/organisation/assets';
+import { 
+  selectLoading, 
+  selectAddStatus,
+  selectAddError,
+  resetAddStatus 
+} from '../../store/slices/organisation/assetsSlice';
+import { addAsset, fetchAssets } from '../../store/actions/organisation/assets';
 import { fetchDepartments } from '../../store/actions/organisation/dept';
 import { selectDepartments } from '../../store/slices/organisation/deptSlice';
-import { 
-  selectAddAssetStatus, 
-  selectAddAssetError,
-  resetAddAssetStatus 
-} from '../../store/slices/organisation/assetsSlice';
-import { fetchAssets } from '../../store/actions/organisation/assets';
 
 const initialFormValues = {
   assetName: '',
@@ -25,8 +25,9 @@ export const useAddAsset = (closeModal) => {
   const [errors, setErrors] = useState({});
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   
-  const loading = useSelector(selectAddAssetStatus) === 'loading';
-  const error = useSelector(selectAddAssetError);
+  const loading = useSelector(selectLoading);
+  const addStatus = useSelector(selectAddStatus);
+  const error = useSelector(selectAddError);
   const departments = useSelector(selectDepartments);
   const organizationId = localStorage.getItem('orgId');
 
@@ -59,7 +60,6 @@ export const useAddAsset = (closeModal) => {
     if (!formValues.purchaseDate) newErrors.purchaseDate = 'Purchase date is required';
     if (!formValues.condition) newErrors.condition = 'Asset condition is required';
     
-    // Validate assignedTo if provided
     if (formValues.assignedTo && !Number.isInteger(Number(formValues.assignedTo))) {
       newErrors.assignedTo = 'Employee ID must be a number';
     }
@@ -70,7 +70,7 @@ export const useAddAsset = (closeModal) => {
   const handleReset = useCallback(() => {
     setFormValues(initialFormValues);
     setErrors({});
-    dispatch(resetAddAssetStatus());
+    dispatch(resetAddStatus());
   }, [dispatch]);
 
   const handleDepartmentAdded = useCallback((newDepartment) => {
@@ -99,7 +99,6 @@ export const useAddAsset = (closeModal) => {
 
     try {
       await dispatch(addAsset(assetData)).unwrap();
-      await dispatch(fetchAssets(organizationId));
       notifications.show({
         title: 'Success',
         message: 'Asset added successfully',
@@ -116,6 +115,13 @@ export const useAddAsset = (closeModal) => {
       setErrors({ general: 'Failed to add asset. Please try again.' });
     }
   }, [formValues, validate, organizationId, dispatch, handleReset, closeModal]);
+
+  useEffect(() => {
+    if (addStatus === 'succeeded') {
+      setFormValues(initialFormValues);
+      setErrors({});
+    }
+  }, [addStatus]);
 
   return {
     formValues,
