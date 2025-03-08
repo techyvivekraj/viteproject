@@ -8,36 +8,33 @@ import {
 } from '../../actions/organisation/holidays';
 
 const initialState = {
-  holidays: [],
-  calendar: {},
+  holidays: null,
   loading: false,
   error: null,
   lastFetch: null,
-  addHolidayStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-  addHolidayError: null,
+  addStatus: 'idle',
+  addError: null,
   updateStatus: 'idle',
   updateError: null,
-  selectedYear: new Date().getFullYear(),
-  selectedMonth: new Date().getMonth() + 1
+  deleteStatus: 'idle',
+  deleteError: null
 };
 
 const holidaySlice = createSlice({
   name: 'holidays',
   initialState,
   reducers: {
-    resetAddHolidayStatus: (state) => {
-      state.addHolidayStatus = 'idle';
-      state.addHolidayError = null;
+    resetAddStatus: (state) => {
+      state.addStatus = 'idle';
+      state.addError = null;
     },
     resetUpdateStatus: (state) => {
       state.updateStatus = 'idle';
       state.updateError = null;
     },
-    setSelectedYear: (state, action) => {
-      state.selectedYear = action.payload;
-    },
-    setSelectedMonth: (state, action) => {
-      state.selectedMonth = action.payload;
+    resetDeleteStatus: (state) => {
+      state.deleteStatus = 'idle';
+      state.deleteError = null;
     }
   },
   extraReducers: (builder) => {
@@ -51,6 +48,7 @@ const holidaySlice = createSlice({
         state.holidays = action.payload;
         state.loading = false;
         state.lastFetch = Date.now();
+        state.error = null;
       })
       .addCase(fetchHolidays.rejected, (state, action) => {
         state.loading = false;
@@ -59,20 +57,18 @@ const holidaySlice = createSlice({
 
       // Add Holiday
       .addCase(addHoliday.pending, (state) => {
-        state.addHolidayStatus = 'loading';
-        state.addHolidayError = null;
+        state.addStatus = 'loading';
+        state.addError = null;
       })
       .addCase(addHoliday.fulfilled, (state, action) => {
-        state.holidays.push(action.payload);
-        state.addHolidayStatus = 'succeeded';
-        // Update calendar if the holiday is for the current view
-        if (state.calendar[action.payload.holidayDate]) {
-          state.calendar[action.payload.holidayDate].holidays.push(action.payload);
+        if (state.holidays?.data) {
+          state.holidays.data.push(action.payload.data);
         }
+        state.addStatus = 'succeeded';
       })
       .addCase(addHoliday.rejected, (state, action) => {
-        state.addHolidayStatus = 'failed';
-        state.addHolidayError = action.payload;
+        state.addStatus = 'failed';
+        state.addError = action.payload;
       })
 
       // Update Holiday
@@ -81,21 +77,15 @@ const holidaySlice = createSlice({
         state.updateError = null;
       })
       .addCase(updateHoliday.fulfilled, (state, action) => {
-        const index = state.holidays.findIndex(
-          holiday => holiday.holidayId === action.payload.holidayId
-        );
-        if (index !== -1) {
-          state.holidays[index] = action.payload;
-        }
-        state.updateStatus = 'succeeded';
-        // Update calendar if necessary
-        if (state.calendar[action.payload.holidayDate]) {
-          const calendarIndex = state.calendar[action.payload.holidayDate].holidays
-            .findIndex(h => h.holidayId === action.payload.holidayId);
-          if (calendarIndex !== -1) {
-            state.calendar[action.payload.holidayDate].holidays[calendarIndex] = action.payload;
+        if (state.holidays?.data) {
+          const index = state.holidays.data.findIndex(
+            holiday => holiday.id === action.payload.data.id
+          );
+          if (index !== -1) {
+            state.holidays.data[index] = action.payload.data;
           }
         }
+        state.updateStatus = 'succeeded';
       })
       .addCase(updateHoliday.rejected, (state, action) => {
         state.updateStatus = 'failed';
@@ -103,16 +93,21 @@ const holidaySlice = createSlice({
       })
 
       // Delete Holiday
+      .addCase(deleteHoliday.pending, (state) => {
+        state.deleteStatus = 'loading';
+        state.deleteError = null;
+      })
       .addCase(deleteHoliday.fulfilled, (state, action) => {
-        state.holidays = state.holidays.filter(
-          holiday => holiday.holidayId !== action.payload.holidayId
-        );
-        // Remove from calendar if present
-        Object.keys(state.calendar).forEach(date => {
-          state.calendar[date].holidays = state.calendar[date].holidays.filter(
-            h => h.holidayId !== action.payload.holidayId
+        if (state.holidays?.data) {
+          state.holidays.data = state.holidays.data.filter(
+            holiday => holiday.id !== action.payload.id
           );
-        });
+        }
+        state.deleteStatus = 'succeeded';
+      })
+      .addCase(deleteHoliday.rejected, (state, action) => {
+        state.deleteStatus = 'failed';
+        state.deleteError = action.payload;
       })
 
       // Fetch Holiday Calendar
@@ -133,10 +128,9 @@ const holidaySlice = createSlice({
 
 // Export actions
 export const {
-  resetAddHolidayStatus,
+  resetAddStatus,
   resetUpdateStatus,
-  setSelectedYear,
-  setSelectedMonth
+  resetDeleteStatus
 } = holidaySlice.actions;
 
 // Export selectors
@@ -144,13 +138,12 @@ export const selectHolidays = (state) => state.holidays.holidays;
 export const selectLoading = (state) => state.holidays.loading;
 export const selectError = (state) => state.holidays.error;
 export const selectLastFetch = (state) => state.holidays.lastFetch;
-export const selectAddHolidayStatus = (state) => state.holidays.addHolidayStatus;
-export const selectAddHolidayError = (state) => state.holidays.addHolidayError;
+export const selectAddStatus = (state) => state.holidays.addStatus;
+export const selectAddError = (state) => state.holidays.addError;
 export const selectUpdateStatus = (state) => state.holidays.updateStatus;
 export const selectUpdateError = (state) => state.holidays.updateError;
-export const selectHolidayCalendar = (state) => state.holidays.calendar;
-export const selectSelectedYear = (state) => state.holidays.selectedYear;
-export const selectSelectedMonth = (state) => state.holidays.selectedMonth;
+export const selectDeleteStatus = (state) => state.holidays.deleteStatus;
+export const selectDeleteError = (state) => state.holidays.deleteError;
 
 // Export reducer
 export default holidaySlice.reducer; 

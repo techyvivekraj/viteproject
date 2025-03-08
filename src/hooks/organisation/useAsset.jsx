@@ -10,6 +10,7 @@ import {
 } from '../../store/slices/organisation/assetsSlice';
 import { fetchAssets, deleteAsset } from '../../store/actions/organisation/assets';
 import dayjs from 'dayjs';
+import { capitalizeFirstLetter } from '../../utils/utils';
 
 export const useAsset = () => {
   const dispatch = useDispatch();
@@ -79,7 +80,7 @@ export const useAsset = () => {
       width: '30%',
       render: (item) => (
         <Text size="sm" fw={500} lineClamp={1}>
-        {item.asset_name || 'N/A'}
+        {capitalizeFirstLetter(item.asset_name || 'N/A')}
       </Text>
       ),
     },

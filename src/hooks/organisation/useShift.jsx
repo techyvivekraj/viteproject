@@ -4,6 +4,7 @@ import { Text, Badge, Group } from '@mantine/core';
 import { selectShifts, selectLoading, selectError, selectLastFetch } from '../../store/slices/organisation/shiftSlice';
 import { fetchShifts, deleteShift } from '../../store/actions/organisation/shift';
 import { showError, showToast } from '../../components/api';
+import { capitalizeFirstLetter } from '../../utils/utils';
 
 export const useShift = () => {
   const dispatch = useDispatch();
@@ -11,7 +12,7 @@ export const useShift = () => {
   const shifts = useSelector(selectShifts);
   const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
-    const lastFetch = useSelector(selectLastFetch);
+  const lastFetch = useSelector(selectLastFetch);
 
   useEffect(() => {
     if (!lastFetch || Date.now() - lastFetch > 300000) {
@@ -38,8 +39,8 @@ export const useShift = () => {
       header: 'Shift Name',
       accessor: 'name',
       render: (item) => (
-        <Text fw={500}>
-          {item.name || 'N/A'}
+        <Text size="sm" fw={500} lineClamp={1}>
+          {capitalizeFirstLetter(item.name || 'N/A')}
         </Text>
       ),
     },
@@ -67,7 +68,7 @@ export const useShift = () => {
       render: (item) => (
         <Group spacing={4}>
           {formatWorkingDays(item.working_days).map((day, index) => (
-            <Badge 
+            <Badge
               key={index}
               variant="light"
               color="blue"

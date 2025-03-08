@@ -8,6 +8,7 @@ import {
 } from '../../store/slices/organisation/designationSlice';
 import { fetchDesignations, deleteDesignation } from '../../store/actions/organisation/designation';
 import { showError, showToast } from '../../components/api';
+import { capitalizeFirstLetter } from '../../utils/utils';
 
 export const useDesignation = () => {
   const dispatch = useDispatch();
@@ -35,7 +36,10 @@ export const useDesignation = () => {
     {
       header: 'Role Name',
       accessor: 'name',
-      render: (item) => <Text>{item.name || 'N/A'}</Text>,
+      render: (item) => 
+              <Text size="sm" fw={500} lineClamp={1}>
+              {capitalizeFirstLetter(item.name || 'N/A')}
+            </Text>,
     },
     {
       header: 'Department',

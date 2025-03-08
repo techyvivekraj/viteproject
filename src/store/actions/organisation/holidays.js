@@ -4,17 +4,14 @@ import { axiosInstance } from '../../../components/api';
 // Fetch Holidays
 export const fetchHolidays = createAsyncThunk(
   'holidays/fetchHolidays',
-  async ({ organizationId, year }, { rejectWithValue }) => {
+  async ({ organizationId }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get('/holidays', {
-        params: { 
-          organizationId,
-          year 
-        }
+        params: { organizationId }
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to fetch holidays');
+      return rejectWithValue(error.response?.data?.errors?.[0]?.msg || 'Failed to fetch holidays');
     }
   }
 );
@@ -27,7 +24,7 @@ export const addHoliday = createAsyncThunk(
       const response = await axiosInstance.post('/holidays', holidayData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to add holiday');
+      return rejectWithValue(error.response?.data?.errors?.[0]?.msg || 'Failed to add holiday');
     }
   }
 );
@@ -35,12 +32,12 @@ export const addHoliday = createAsyncThunk(
 // Update Holiday
 export const updateHoliday = createAsyncThunk(
   'holidays/updateHoliday',
-  async ({ id, updatedData }, { rejectWithValue }) => {
+  async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.put(`/holidays/${id}`, updatedData);
+      const response = await axiosInstance.put(`/holidays/${id}`, data);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to update holiday');
+      return rejectWithValue(error.response?.data?.errors?.[0]?.msg || 'Failed to update holiday');
     }
   }
 );
@@ -48,12 +45,14 @@ export const updateHoliday = createAsyncThunk(
 // Delete Holiday
 export const deleteHoliday = createAsyncThunk(
   'holidays/deleteHoliday',
-  async ({ holidayId, organizationId }, { rejectWithValue }) => {
+  async ({ id, organizationId }, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/holidays/${holidayId}`);
-      return { holidayId };
+      await axiosInstance.delete(`/holidays/${id}`, {
+        data: { organizationId }
+      });
+      return { id };
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to delete holiday');
+      return rejectWithValue(error.response?.data?.errors?.[0]?.msg || 'Failed to delete holiday');
     }
   }
 );

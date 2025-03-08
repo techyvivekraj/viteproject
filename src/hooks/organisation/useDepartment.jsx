@@ -8,6 +8,7 @@ import {
 } from '../../store/slices/organisation/deptSlice';
 import { fetchDepartments, deleteDepartments } from '../../store/actions/organisation/dept';
 import { showError } from '../../components/api';
+import { capitalizeFirstLetter } from '../../utils/utils';
 
 export const useDepartment = () => {
   const dispatch = useDispatch();
@@ -69,7 +70,9 @@ export const useDepartment = () => {
     {
       header: 'Department Name',
       accessor: 'departmentName',
-      render: (item) => <Text>{item.departmentName || 'N/A'}</Text>,
+      render: (item) => <Text size="sm" fw={500} lineClamp={1}>
+              {capitalizeFirstLetter(item.departmentName || 'N/A')}
+            </Text>
     },
     {
       header: 'Leave Details',
