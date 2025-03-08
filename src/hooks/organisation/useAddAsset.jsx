@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { notifications } from '@mantine/notifications';
 import { 
   selectLoading, 
   selectAddStatus,
@@ -9,7 +8,8 @@ import {
 } from '../../store/slices/organisation/assetsSlice';
 import { addAsset } from '../../store/actions/organisation/assets';
 import { fetchDepartments } from '../../store/actions/organisation/dept';
-import { selectDepartments } from '../../store/slices/organisation/deptSlice';
+import { selectDepartments, selectLastFetch } from '../../store/slices/organisation/deptSlice';
+import { showError, showToast } from '../../components/api';
 
 const initialFormValues = {
   assetName: '',
@@ -30,12 +30,13 @@ export const useAddAsset = (closeModal) => {
   const error = useSelector(selectAddError);
   const departments = useSelector(selectDepartments);
   const organizationId = localStorage.getItem('orgId');
+    const lastFetch = useSelector(selectLastFetch);
 
   useEffect(() => {
-    if (organizationId) {
+    if (!lastFetch || Date.now() - lastFetch > 300000) {
       dispatch(fetchDepartments(organizationId));
     }
-  }, [dispatch, organizationId]);
+  }, [dispatch, lastFetch, organizationId]);
 
   const departmentList = [
     ...(departments?.data?.map(dept => ({
@@ -99,19 +100,11 @@ export const useAddAsset = (closeModal) => {
 
     try {
       await dispatch(addAsset(assetData)).unwrap();
-      notifications.show({
-        title: 'Success',
-        message: 'Asset added successfully',
-        color: 'green'
-      });
+      showToast('Asset added successfully');
       handleReset();
       closeModal();
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: error.message || 'Failed to add asset',
-        color: 'red'
-      });
+      showError(error.message || 'Failed to add asset');
       setErrors({ general: 'Failed to add asset. Please try again.' });
     }
   }, [formValues, validate, organizationId, dispatch, handleReset, closeModal]);

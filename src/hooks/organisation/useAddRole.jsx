@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { notifications } from '@mantine/notifications';
 import { selectLoading, selectAddStatus } from '../../store/slices/organisation/designationSlice';
-import { selectDepartments } from '../../store/slices/organisation/deptSlice';
+import { selectDepartments, selectLastFetch } from '../../store/slices/organisation/deptSlice';
 import { addDesignation } from '../../store/actions/organisation/designation';
 import { fetchDepartments } from '../../store/actions/organisation/dept';
+import { showError, showToast } from '../../components/api';
 
 const initialFormState = {
   name: '',
@@ -18,15 +18,16 @@ export const useAddRole = (closeModal) => {
   const loading = useSelector(selectLoading);
   const addStatus = useSelector(selectAddStatus);
   const departments = useSelector(selectDepartments);
+  const lastFetch = useSelector(selectLastFetch);
   
   const dispatch = useDispatch();
   const organizationId = localStorage.getItem('orgId');
 
   useEffect(() => {
-    if (organizationId) {
+    if (!lastFetch || Date.now() - lastFetch > 300000) {
       dispatch(fetchDepartments(organizationId));
     }
-  }, [dispatch, organizationId]);
+  }, [dispatch, lastFetch, organizationId]);
 
   const departmentList = departments?.data?.map(dept => ({
     value: String(dept.id),
@@ -60,19 +61,11 @@ export const useAddRole = (closeModal) => {
       };
 
       await dispatch(addDesignation(roleData)).unwrap();
-      notifications.show({
-        title: 'Success',
-        message: 'Role added successfully',
-        color: 'green'
-      });
+      showToast('Role added successfully');
       setFormValues(initialFormState);
       closeModal();
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: error.message || 'Failed to add role',
-        color: 'red'
-      });
+      showError(error.message || 'Failed to add asset');
       setErrors({ general: 'Failed to add role. Please try again.' });
     }
   }, [formValues, validate, organizationId, dispatch, closeModal]);

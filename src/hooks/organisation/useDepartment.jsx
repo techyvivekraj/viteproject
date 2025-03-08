@@ -7,6 +7,7 @@ import {
   selectLoading 
 } from '../../store/slices/organisation/deptSlice';
 import { fetchDepartments, deleteDepartments } from '../../store/actions/organisation/dept';
+import { showError } from '../../components/api';
 
 export const useDepartment = () => {
   const dispatch = useDispatch();
@@ -85,10 +86,8 @@ export const useDepartment = () => {
   const handleDelete = useCallback(async (deptId) => {
     try {
       await dispatch(deleteDepartments({ id: deptId, organizationId })).unwrap();
-      // Refresh departments list after successful deletion
-      dispatch(fetchDepartments(organizationId));
     } catch (error) {
-      console.error('Failed to delete department:', error);
+            showError(error.message || 'Failed to delete department');
     }
   }, [dispatch, organizationId]);
 

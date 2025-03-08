@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { notifications } from '@mantine/notifications';
-import { Text, Badge } from '@mantine/core';
-import { fetchAssets, deleteAsset } from '../../store/actions/organisation/assets';
+import { Text, Badge, Group, Avatar } from '@mantine/core';
+import { IconUser } from '@tabler/icons-react';
 import {
   selectAssets,
   selectLoading,
   selectError,
-  selectLastFetch
+  selectLastFetch,
 } from '../../store/slices/organisation/assetsSlice';
+import { fetchAssets, deleteAsset } from '../../store/actions/organisation/assets';
+import dayjs from 'dayjs';
 
 export const useAsset = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const organizationId = localStorage.getItem('orgId');
   const assets = useSelector(selectAssets);
   const loading = useSelector(selectLoading);
@@ -27,7 +26,7 @@ export const useAsset = () => {
   }, [dispatch, organizationId]);
 
   useEffect(() => {
-    if (organizationId) {
+    if (!lastFetch || Date.now() - lastFetch > 300000) {
       fetchAssetsData();
     }
   }, [fetchAssetsData, lastFetch, organizationId]);
@@ -49,6 +48,8 @@ export const useAsset = () => {
         return 'red';
       case 'returned':
         return 'blue';
+      case 'maintenance':
+        return 'yellow';
       default:
         return 'gray';
     }
@@ -57,9 +58,13 @@ export const useAsset = () => {
   const getConditionColor = (condition) => {
     switch (condition?.toLowerCase()) {
       case 'new':
+        return 'teal';
+      case 'good':
         return 'green';
-      case 'used':
+      case 'fair':
         return 'yellow';
+      case 'poor':
+        return 'orange';
       case 'damaged':
         return 'red';
       default:
@@ -69,72 +74,86 @@ export const useAsset = () => {
 
   const columns = useMemo(() => [
     {
-      header: 'Asset Name',
+      header: 'Asset Details',
       accessor: 'asset_name',
+      width: '30%',
       render: (item) => (
-        <Text fw={500}>
-          {item.asset_name || 'N/A'}
-        </Text>
+        <Text size="sm" fw={500} lineClamp={1}>
+        {item.asset_name || 'N/A'}
+      </Text>
       ),
     },
     {
       header: 'Purchase Date',
       accessor: 'purchase_date',
+      width: '15%',
       render: (item) => (
-        <Text>
-          {item.purchase_date || 'N/A'}
+        <Text size="sm">
+         {item.purchase_date ? dayjs(item.purchase_date).format('DD MMMM YYYY') : 'N/A'}
         </Text>
       ),
     },
     {
-      header: 'Condition',
-      accessor: 'conditionn',
-      render: (item) => (
-        <Badge 
-          color={getConditionColor(item.conditionn)}
-          variant="light"
-        >
-          {item.conditionn || 'N/A'}
-        </Badge>
-      ),
-    },
-    {
-      header: 'Status',
+      header: 'Status & Condition',
       accessor: 'status',
+      width: '25%',
       render: (item) => (
-        <Badge 
-          color={getStatusColor(item.status)}
-          variant="filled"
-        >
-          {item.status || 'N/A'}
-        </Badge>
+        <Group spacing={8}>
+          <Badge 
+            color={getStatusColor(item.status)}
+            variant="filled"
+            size="sm"
+          >
+            {item.status || 'N/A'}
+          </Badge>
+          <Badge 
+            color={getConditionColor(item.conditionn)}
+            variant="light"
+            size="sm"
+          >
+            {item.conditionn || 'N/A'}
+          </Badge>
+        </Group>
       ),
     },
     {
       header: 'Assigned To',
       accessor: 'assigned_to',
+      width: '30%',
       render: (item) => (
-        <Text>
-          {item.first_name && item.last_name 
-            ? `${item.first_name} ${item.last_name}`
-            : 'Not Assigned'}
-        </Text>
+        <Group spacing="sm">
+          {item.first_name && item.last_name ? (
+            <>
+              <Avatar
+                size={32}
+                radius="xl"
+                color="cyan"
+                variant="filled"
+              >
+                <IconUser size={20} />
+              </Avatar>
+              <div>
+                <Text size="sm" fw={500}>
+                  {`${item.first_name} ${item.last_name}`}
+                </Text>
+                <Text size="xs" color="dimmed">
+                  Employee
+                </Text>
+              </div>
+            </>
+          ) : (
+            <Text size="sm" color="dimmed">Not Assigned</Text>
+          )}
+        </Group>
       ),
     }
   ], []);
-
-  const handleAddClick = useCallback(() => navigate('/asset/add'), [navigate]);
-  const handleViewClick = useCallback((asset) => navigate(`/assets/view/${asset.id}`), [navigate]);
-  const handleEditClick = useCallback((asset) => navigate(`/assets/edit/${asset.id}`), [navigate]);
 
   return {
     assets: assets?.data || [],
     loading,
     error,
     columns,
-    handleAddClick,
-    handleViewClick,
-    handleEditClick,
     handleDelete,
     fetchAssets: fetchAssetsData
   };

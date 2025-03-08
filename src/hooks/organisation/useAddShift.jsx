@@ -93,7 +93,7 @@ export const useAddShift = (onSuccess) => {
 
   const formatWorkingDaysForSubmit = useCallback((workingDays) => {
     return Object.entries(workingDays)
-      .filter(([_, isSelected]) => isSelected)
+      .filter(([, isSelected]) => isSelected)
       .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1))
       .join(',');
   }, []);

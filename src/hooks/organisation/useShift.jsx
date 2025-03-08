@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Text, Badge, Group } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { selectShifts, selectLoading, selectError } from '../../store/slices/organisation/shiftSlice';
+import { selectShifts, selectLoading, selectError, selectLastFetch } from '../../store/slices/organisation/shiftSlice';
 import { fetchShifts, deleteShift } from '../../store/actions/organisation/shift';
+import { showError, showToast } from '../../components/api';
 
 export const useShift = () => {
   const dispatch = useDispatch();
@@ -11,27 +11,20 @@ export const useShift = () => {
   const shifts = useSelector(selectShifts);
   const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
+    const lastFetch = useSelector(selectLastFetch);
 
   useEffect(() => {
-    if (organizationId) {
+    if (!lastFetch || Date.now() - lastFetch > 300000) {
       dispatch(fetchShifts(organizationId));
     }
-  }, [dispatch, organizationId]);
+  }, [dispatch, lastFetch, organizationId]);
 
   const handleDelete = useCallback(async (id) => {
     try {
       await dispatch(deleteShift({ id, organizationId })).unwrap();
-      notifications.show({
-        title: 'Success',
-        message: 'Shift deleted successfully',
-        color: 'green'
-      });
+      showToast('Shift deleted successfully');
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: error.message || 'Failed to delete shift',
-        color: 'red'
-      });
+      showError(error.message || 'Failed to delete shift');
     }
   }, [dispatch, organizationId]);
 

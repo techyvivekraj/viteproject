@@ -44,9 +44,9 @@ export const updateDepartment = createAsyncThunk(
 // Delete Department
 export const deleteDepartments = createAsyncThunk(
   'organisation/deleteDepartment',
-  async (id, { rejectWithValue }) => {
+  async (id,organizationId, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/departments/${id}`);
+      await axiosInstance.delete(`/departments/${id}`, { data: { organizationId } });
       return { id };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Failed to delete department');

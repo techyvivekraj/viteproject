@@ -2,12 +2,14 @@ import { createSlice } from '@reduxjs/toolkit';
 import { fetchAssets, addAsset, updateAsset, deleteAsset } from '../../actions/organisation/assets';
 
 const initialState = {
-  assets: [],
+  assets: null,
   loading: false,
   error: null,
   lastFetch: null,
-  addStatus: 'idle',  // Changed to match useAddRole pattern
-  addError: null
+  addStatus: 'idle',
+  addError: null,
+  updateStatus: 'idle',
+  updateError: null
 };
 
 const assetsSlice = createSlice({
@@ -17,6 +19,10 @@ const assetsSlice = createSlice({
     resetAddStatus: (state) => {
       state.addStatus = 'idle';
       state.addError = null;
+    },
+    resetUpdateStatus: (state) => {
+      state.updateStatus = 'idle';
+      state.updateError = null;
     }
   },
   extraReducers: (builder) => {
@@ -42,36 +48,52 @@ const assetsSlice = createSlice({
         state.addError = null;
       })
       .addCase(addAsset.fulfilled, (state, action) => {
+        if (state.assets?.data) {
+          state.assets.data.push(action.payload.data);
+        }
         state.addStatus = 'succeeded';
-        state.addError = null;
-        // Refresh will happen through fetchAssets
       })
       .addCase(addAsset.rejected, (state, action) => {
         state.addStatus = 'failed';
         state.addError = action.payload;
       })
       // Update Asset
+      .addCase(updateAsset.pending, (state) => {
+        state.updateStatus = 'loading';
+        state.updateError = null;
+      })
       .addCase(updateAsset.fulfilled, (state, action) => {
-        const index = state.assets.findIndex(asset => asset.id === action.payload.id);
-        if (index !== -1) {
-          state.assets[index] = action.payload;
+        if (state.assets?.data) {
+          const index = state.assets.data.findIndex(asset => asset.id === action.payload.data.id);
+          if (index !== -1) {
+            state.assets.data[index] = action.payload.data;
+          }
         }
+        state.updateStatus = 'succeeded';
+      })
+      .addCase(updateAsset.rejected, (state, action) => {
+        state.updateStatus = 'failed';
+        state.updateError = action.payload;
       })
       // Delete Asset
       .addCase(deleteAsset.fulfilled, (state, action) => {
-        state.assets = state.assets.filter(asset => asset.id !== action.payload.id);
+        if (state.assets?.data) {
+          state.assets.data = state.assets.data.filter(asset => asset.id !== action.payload.id);
+        }
       });
   }
 });
 
-export const { resetAddStatus } = assetsSlice.actions;
+export const { resetAddStatus, resetUpdateStatus } = assetsSlice.actions;
 
-// Updated selectors to match useAddRole pattern
+// Export selectors with consistent naming
 export const selectAssets = (state) => state.assets.assets;
 export const selectLoading = (state) => state.assets.loading;
 export const selectError = (state) => state.assets.error;
 export const selectLastFetch = (state) => state.assets.lastFetch;
 export const selectAddStatus = (state) => state.assets.addStatus;
 export const selectAddError = (state) => state.assets.addError;
+export const selectUpdateStatus = (state) => state.assets.updateStatus;
+export const selectUpdateError = (state) => state.assets.updateError;
 
 export default assetsSlice.reducer; 

@@ -1,39 +1,33 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Text } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import {
   selectDesignations,
+  selectLastFetch,
   selectLoading,
 } from '../../store/slices/organisation/designationSlice';
 import { fetchDesignations, deleteDesignation } from '../../store/actions/organisation/designation';
+import { showError, showToast } from '../../components/api';
 
 export const useDesignation = () => {
   const dispatch = useDispatch();
   const organizationId = localStorage.getItem('orgId');
   const designations = useSelector(selectDesignations);
   const loading = useSelector(selectLoading);
+    const lastFetch = useSelector(selectLastFetch);
 
   useEffect(() => {
-    if (organizationId) {
+    if (!lastFetch || Date.now() - lastFetch > 300000) {
       dispatch(fetchDesignations(organizationId));
     }
-  }, [dispatch, organizationId]);
+  }, [dispatch, lastFetch, organizationId]);
 
   const handleDelete = useCallback(async (id) => {
     try {
       await dispatch(deleteDesignation({ id, organizationId })).unwrap();
-      notifications.show({
-        title: 'Success',
-        message: 'Role deleted successfully',
-        color: 'green'
-      });
+      showToast('Role deleted successfully');
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: error.message || 'Failed to delete role',
-        color: 'red'
-      });
+      showError(error.message || 'Failed to delete role');
     }
   }, [dispatch, organizationId]);
 
