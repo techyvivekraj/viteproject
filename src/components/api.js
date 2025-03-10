@@ -50,8 +50,8 @@ const handleError = (error) => {
                 break;
             case 401:
                 errorMessage =  errorMessage ||'Unauthorized. Please log in.';
-                // localStorage.clear();
-                // window.location.href = '/login';
+                localStorage.clear();
+                window.location.href = '/login';
                 break;
             case 403:
                 errorMessage =  errorMessage ||'Your session has expired. Please log in again.';
