@@ -13,6 +13,7 @@ import { selectAddEmployeeStatus, selectAddEmployeeError } from '../store/slices
 const initialFormState = {
   // Required fields
   firstName: '',
+  middleName: '',
   lastName: '',
   phone: '',
   email: '',
@@ -27,12 +28,17 @@ const initialFormState = {
   gender: '',
   bloodGroup: '',
   address: '',
+  city: '',
   country: '',
   state: '',
   postalCode: '',
+  emergencyContactName: '',
+  emergencyContactPhone: '',
   reportingManagerId: '',
   bankAccountNumber: '',
-  bankIfscCode: ''
+  bankIfscCode: '',
+  bankName: '',
+  bankBranch: ''
 };
 
 export const useAddEmployee = (onSuccess) => {
@@ -79,6 +85,9 @@ export const useAddEmployee = (onSuccess) => {
     if (!formValues.firstName?.trim()) newErrors.firstName = 'First name is required';
     if (!formValues.lastName?.trim()) newErrors.lastName = 'Last name is required';
     if (!formValues.phone?.trim()) newErrors.phone = 'Phone number is required';
+    else if (!/^\d{10}$/.test(formValues.phone)) {
+      newErrors.phone = 'Phone number must be 10 digits';
+    }
     if (!formValues.email?.trim()) newErrors.email = 'Email is required';
     else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formValues.email)) {
       newErrors.email = 'Invalid email address';
@@ -87,6 +96,14 @@ export const useAddEmployee = (onSuccess) => {
     if (!formValues.departmentId) newErrors.departmentId = 'Department is required';
     if (!formValues.designationId) newErrors.designationId = 'Designation is required';
     if (!formValues.shiftId) newErrors.shiftId = 'Shift is required';
+
+    // Optional fields validation
+    if (formValues.emergencyContactPhone && !/^\d{10}$/.test(formValues.emergencyContactPhone)) {
+      newErrors.emergencyContactPhone = 'Emergency contact number must be 10 digits';
+    }
+    if (formValues.bankIfscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formValues.bankIfscCode)) {
+      newErrors.bankIfscCode = 'Invalid IFSC code format';
+    }
 
     return newErrors;
   }, [formValues]);
