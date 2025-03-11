@@ -11,19 +11,22 @@ import {
   Anchor,
   Stack,
   Container,
+  Box,
 } from '@mantine/core';
 import { MantineLogo } from '@mantinex/mantine-logo';
-import { useCallback, useEffect, useMemo, } from 'react';
+import { useCallback, useEffect, useMemo, useRef, } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectIsLoading, selectIsRegistered, selectUser, selectError, clearError, resetRegistered } from '../../store/slices/authSlice';
 import '../../styles/index.css'
 import { loginUser, registerUser } from '../../store/actions/auth';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function Login(props) {
   const [type, toggle] = useToggle(['login', 'register']);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const recaptchaRef = useRef(null);
   
   const user = useSelector(selectUser);
   const isRegistered = useSelector(selectIsRegistered);
@@ -39,6 +42,7 @@ export default function Login(props) {
       terms: true,
       confirmPassword: '',
       organizationName: '',
+      recaptcha: '',
     },
     validate: {
       email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
@@ -49,6 +53,7 @@ export default function Login(props) {
         type === 'register' && value !== values.password ? 'Passwords do not match' : null,
       terms: (value, values) =>
         type === 'register' && !value ? 'You must agree to the terms and conditions' : null,
+      recaptcha: (value) => (!value && type === 'login' ? 'Please verify that you are not a robot' : null),
     },
   });
 
@@ -57,14 +62,29 @@ export default function Login(props) {
     if (type === 'register') {
       dispatch(registerUser(values));
     } else {
-      dispatch(loginUser({ email: values.email, password: values.password }));
+      if (!values.recaptcha) {
+        form.setFieldError('recaptcha', 'Please verify that you are not a robot');
+        return;
+      }
+      dispatch(loginUser({ 
+        email: values.email, 
+        password: values.password,
+        recaptchaToken: values.recaptcha 
+      }));
     }
-  }, [dispatch, type]);
+  }, [dispatch, type, form]);
+
+  const handleRecaptchaChange = (token) => {
+    form.setFieldValue('recaptcha', token);
+  };
 
   const toggleType = useCallback(() => {
     dispatch(clearError());
     dispatch(resetRegistered());
     form.reset();
+    if (recaptchaRef.current) {
+      recaptchaRef.current.reset();
+    }
     toggle();
   }, [dispatch, toggle, form]);
 
@@ -79,6 +99,7 @@ export default function Login(props) {
       toggleType();
     }
   }, [isRegistered, toggleType]);
+
   const formFields = useMemo(() => (
     <Stack>
       {type === 'register' && (
@@ -141,6 +162,20 @@ export default function Login(props) {
           />
         </>
       )}
+      {type === 'login' && (
+        <div>
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey="6LeZA_EqAAAAAMpgZdPH2_B0hxGSh6aMJM8d-PXI"
+            onChange={handleRecaptchaChange}
+          />
+          {form.errors.recaptcha && (
+            <div style={{ color: 'red', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+              {form.errors.recaptcha}
+            </div>
+          )}
+        </div>
+      )}
     </Stack>
   ), [type, form]);
 
@@ -167,8 +202,8 @@ export default function Login(props) {
               </Button>
             </Group>
           </form>
-          {/* <Divider label="Or continue with email" labelPosition="center" my="lg" />
-          <Group grow mb="md" mt="md">
+          {/* <Divider label="Or continue with email" labelPosition="center" my="lg" /> */}
+          {/* <Group grow mb="md" mt="md">
             <GoogleButton radius="xl">Google</GoogleButton>
           </Group> */}
         </Paper>

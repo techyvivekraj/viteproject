@@ -21,10 +21,16 @@ export const addEmployee = createAsyncThunk(
   'employees/addEmployee',
   async (employeeData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/employees', {
+      // Convert default values to actual IDs for the API
+      const convertedData = {
         ...employeeData,
-        organizationId: 1 // You might want to make this dynamic based on your needs
-      });
+        departmentId: employeeData.departmentId === 'default_dept' ? '1' : employeeData.departmentId,
+        designationId: employeeData.designationId === 'default_desig' ? '1' : employeeData.designationId,
+        shiftId: employeeData.shiftId === 'default_shift' ? '1' : employeeData.shiftId,
+        organizationId: employeeData.organizationId || 1
+      };
+
+      const response = await axiosInstance.post('/employees', convertedData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Failed to add employee');

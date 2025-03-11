@@ -10,10 +10,52 @@ import { selectDesignations } from '../store/slices/organisation/designationSlic
 import { selectShifts } from '../store/slices/organisation/shiftSlice';
 import { selectAddEmployeeStatus, selectAddEmployeeError } from '../store/slices/employeesSlice';
 
+const countryOptions = [
+  { value: 'US', label: 'United States' },
+  { value: 'IN', label: 'India' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'UK', label: 'United Kingdom' },
+  { value: 'AU', label: 'Australia' }
+];
+
+const indianStates = [
+  { value: 'AN', label: 'Andaman and Nicobar Islands' },
+  { value: 'AP', label: 'Andhra Pradesh' },
+  { value: 'AR', label: 'Arunachal Pradesh' },
+  { value: 'AS', label: 'Assam' },
+  { value: 'BR', label: 'Bihar' },
+  { value: 'CH', label: 'Chandigarh' },
+  { value: 'CT', label: 'Chhattisgarh' },
+  { value: 'DL', label: 'Delhi' },
+  { value: 'GA', label: 'Goa' },
+  { value: 'GJ', label: 'Gujarat' },
+  { value: 'HR', label: 'Haryana' },
+  { value: 'HP', label: 'Himachal Pradesh' },
+  { value: 'JK', label: 'Jammu and Kashmir' },
+  { value: 'JH', label: 'Jharkhand' },
+  { value: 'KA', label: 'Karnataka' },
+  { value: 'KL', label: 'Kerala' },
+  { value: 'MP', label: 'Madhya Pradesh' },
+  { value: 'MH', label: 'Maharashtra' },
+  { value: 'MN', label: 'Manipur' },
+  { value: 'ML', label: 'Meghalaya' },
+  { value: 'MZ', label: 'Mizoram' },
+  { value: 'NL', label: 'Nagaland' },
+  { value: 'OR', label: 'Odisha' },
+  { value: 'PB', label: 'Punjab' },
+  { value: 'RJ', label: 'Rajasthan' },
+  { value: 'SK', label: 'Sikkim' },
+  { value: 'TN', label: 'Tamil Nadu' },
+  { value: 'TG', label: 'Telangana' },
+  { value: 'TR', label: 'Tripura' },
+  { value: 'UP', label: 'Uttar Pradesh' },
+  { value: 'UT', label: 'Uttarakhand' },
+  { value: 'WB', label: 'West Bengal' }
+];
+
 const initialFormState = {
   // Required fields
   firstName: '',
-  middleName: '',
   lastName: '',
   phone: '',
   email: '',
@@ -28,17 +70,12 @@ const initialFormState = {
   gender: '',
   bloodGroup: '',
   address: '',
-  city: '',
   country: '',
   state: '',
   postalCode: '',
-  emergencyContactName: '',
-  emergencyContactPhone: '',
   reportingManagerId: '',
   bankAccountNumber: '',
-  bankIfscCode: '',
-  bankName: '',
-  bankBranch: ''
+  bankIfscCode: ''
 };
 
 export const useAddEmployee = (onSuccess) => {
@@ -85,9 +122,6 @@ export const useAddEmployee = (onSuccess) => {
     if (!formValues.firstName?.trim()) newErrors.firstName = 'First name is required';
     if (!formValues.lastName?.trim()) newErrors.lastName = 'Last name is required';
     if (!formValues.phone?.trim()) newErrors.phone = 'Phone number is required';
-    else if (!/^\d{10}$/.test(formValues.phone)) {
-      newErrors.phone = 'Phone number must be 10 digits';
-    }
     if (!formValues.email?.trim()) newErrors.email = 'Email is required';
     else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formValues.email)) {
       newErrors.email = 'Invalid email address';
@@ -96,14 +130,6 @@ export const useAddEmployee = (onSuccess) => {
     if (!formValues.departmentId) newErrors.departmentId = 'Department is required';
     if (!formValues.designationId) newErrors.designationId = 'Designation is required';
     if (!formValues.shiftId) newErrors.shiftId = 'Shift is required';
-
-    // Optional fields validation
-    if (formValues.emergencyContactPhone && !/^\d{10}$/.test(formValues.emergencyContactPhone)) {
-      newErrors.emergencyContactPhone = 'Emergency contact number must be 10 digits';
-    }
-    if (formValues.bankIfscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formValues.bankIfscCode)) {
-      newErrors.bankIfscCode = 'Invalid IFSC code format';
-    }
 
     return newErrors;
   }, [formValues]);

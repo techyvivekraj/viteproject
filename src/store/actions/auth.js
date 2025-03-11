@@ -13,9 +13,13 @@ const handleError = (error) => {
 
 export const loginUser = createAsyncThunk(
     'auth/login',
-    async ({ email, password }, { rejectWithValue }) => {
+    async ({ email, password, recaptchaToken }, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.post('/auth/login', { email, password });
+            const response = await axiosInstance.post('/auth/login', { 
+                email, 
+                password,
+                recaptchaToken 
+            });
             const { data } = response.data;
 
             // Store auth data
