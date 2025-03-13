@@ -165,7 +165,6 @@ export default function AddEmployee() {
                     placeholder="Doe"
                     value={formValues.middleName}
                     onChange={(e) => handleChange('middleName', e.currentTarget.value)}
-                    required
                     error={errors.middleName}
                   />
                 </Grid.Col>
@@ -247,49 +246,7 @@ export default function AddEmployee() {
                     searchable
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
-                  <TextInput
-                    label="Employee ID"
-                    placeholder="EMP12345"
-                    value={formValues.employeeCode}
-                    onChange={(e) => handleChange('employeeCode', e.currentTarget.value)}
-                  />
-                </Grid.Col>
-                <Grid.Col span={4}>
-                  <DateInput
-                    label="Date of Birth"
-                    placeholder="Select date"
-                    value={formValues.dateOfBirth ? new Date(formValues.dateOfBirth) : null}
-                    onChange={(value) => handleChange('dateOfBirth', value)}
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={4}>
-                  <Select
-                    label="Gender"
-                    placeholder="Select gender"
-                    data={genderOptions}
-                    value={formValues.gender}
-                    onChange={(value) => handleChange('gender', value)}
-                  />
-                </Grid.Col>
-                <Grid.Col span={4}>
-                  <Select
-                    label="Blood Group"
-                    placeholder="Select blood group"
-                    data={bloodGroupOptions}
-                    value={formValues.bloodGroup}
-                    onChange={(value) => handleChange('bloodGroup', value)}
-                  />
-                </Grid.Col>
-                <Grid.Col span={4}>
-                  <TextInput
-                    label="Bank Account Number"
-                    placeholder="1234567890"
-                    value={formValues.bankAccountNumber}
-                    onChange={(e) => handleChange('bankAccountNumber', e.currentTarget.value)}
-                  />
-                </Grid.Col>
+                
               </Grid>
             </Card>
           </Stepper.Step>
@@ -350,7 +307,49 @@ export default function AddEmployee() {
                     onChange={(e) => handleChange('postalCode', e.currentTarget.value)}
                   />
                 </Grid.Col>
+<Grid.Col span={4}>
+                  <TextInput
+                    label="Employee ID"
+                    placeholder="EMP12345"
+                    value={formValues.employeeCode}
+                    onChange={(e) => handleChange('employeeCode', e.currentTarget.value)}
+                  />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                  <DateInput
+                    label="Date of Birth"
+                    placeholder="Select date"
+                    value={formValues.dateOfBirth ? new Date(formValues.dateOfBirth) : null}
+                    onChange={(value) => handleChange('dateOfBirth', value)}
+                  />
+                </Grid.Col>
 
+                <Grid.Col span={4}>
+                  <Select
+                    label="Gender"
+                    placeholder="Select gender"
+                    data={genderOptions}
+                    value={formValues.gender}
+                    onChange={(value) => handleChange('gender', value)}
+                  />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                  <Select
+                    label="Blood Group"
+                    placeholder="Select blood group"
+                    data={bloodGroupOptions}
+                    value={formValues.bloodGroup}
+                    onChange={(value) => handleChange('bloodGroup', value)}
+                  />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                  <TextInput
+                    label="Bank Account Number"
+                    placeholder="1234567890"
+                    value={formValues.bankAccountNumber}
+                    onChange={(e) => handleChange('bankAccountNumber', e.currentTarget.value)}
+                  />
+                </Grid.Col>
                 <Grid.Col span={4}>
                   <TextInput
                     label="IFSC Code"
@@ -372,7 +371,7 @@ export default function AddEmployee() {
           >
             Back
           </Button>
-          {active === 2 ? (
+          {active === 1 ? (
             <Button type="submit" loading={loading}>
               Save Employee
             </Button>
