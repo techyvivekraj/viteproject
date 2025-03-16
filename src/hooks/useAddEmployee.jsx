@@ -10,10 +10,77 @@ import { selectDesignations } from '../store/slices/organisation/designationSlic
 import { selectShifts } from '../store/slices/organisation/shiftSlice';
 import { selectAddEmployeeStatus, selectAddEmployeeError } from '../store/slices/employeesSlice';
 
-// File handling utilities
+// Constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const MAX_FILES_PER_CATEGORY = 5;
 
+const genderOptions = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other' }
+];
+
+const bloodGroupOptions = [
+  { value: 'A+', label: 'A+' },
+  { value: 'A-', label: 'A-' },
+  { value: 'B+', label: 'B+' },
+  { value: 'B-', label: 'B-' },
+  { value: 'O+', label: 'O+' },
+  { value: 'O-', label: 'O-' },
+  { value: 'AB+', label: 'AB+' },
+  { value: 'AB-', label: 'AB-' }
+];
+
+const countryOptions = [
+  { value: 'US', label: 'United States' },
+  { value: 'IN', label: 'India' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'UK', label: 'United Kingdom' },
+  { value: 'AU', label: 'Australia' }
+];
+
+const indianStates = [
+  { value: 'AN', label: 'Andaman and Nicobar Islands' },
+  { value: 'AP', label: 'Andhra Pradesh' },
+  { value: 'AR', label: 'Arunachal Pradesh' },
+  { value: 'AS', label: 'Assam' },
+  { value: 'BR', label: 'Bihar' },
+  { value: 'CH', label: 'Chandigarh' },
+  { value: 'CT', label: 'Chhattisgarh' },
+  { value: 'DL', label: 'Delhi' },
+  { value: 'GA', label: 'Goa' },
+  { value: 'GJ', label: 'Gujarat' },
+  { value: 'HR', label: 'Haryana' },
+  { value: 'HP', label: 'Himachal Pradesh' },
+  { value: 'JK', label: 'Jammu and Kashmir' },
+  { value: 'JH', label: 'Jharkhand' },
+  { value: 'KA', label: 'Karnataka' },
+  { value: 'KL', label: 'Kerala' },
+  { value: 'MP', label: 'Madhya Pradesh' },
+  { value: 'MH', label: 'Maharashtra' },
+  { value: 'MN', label: 'Manipur' },
+  { value: 'ML', label: 'Meghalaya' },
+  { value: 'MZ', label: 'Mizoram' },
+  { value: 'NL', label: 'Nagaland' },
+  { value: 'OR', label: 'Odisha' },
+  { value: 'PB', label: 'Punjab' },
+  { value: 'RJ', label: 'Rajasthan' },
+  { value: 'SK', label: 'Sikkim' },
+  { value: 'TN', label: 'Tamil Nadu' },
+  { value: 'TG', label: 'Telangana' },
+  { value: 'TR', label: 'Tripura' },
+  { value: 'UP', label: 'Uttar Pradesh' },
+  { value: 'UT', label: 'Uttarakhand' },
+  { value: 'WB', label: 'West Bengal' }
+];
+
+const salaryTypeOptions = [
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'daily', label: 'Daily' },
+  { value: 'hourly', label: 'Hourly' },
+];
+
+// File handling utilities
 const compressImage = async (file) => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -65,49 +132,6 @@ const processFile = async (file) => {
   
   throw new Error(`File ${file.name} is too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`);
 };
-
-const countryOptions = [
-  { value: 'US', label: 'United States' },
-  { value: 'IN', label: 'India' },
-  { value: 'CA', label: 'Canada' },
-  { value: 'UK', label: 'United Kingdom' },
-  { value: 'AU', label: 'Australia' }
-];
-
-const indianStates = [
-  { value: 'AN', label: 'Andaman and Nicobar Islands' },
-  { value: 'AP', label: 'Andhra Pradesh' },
-  { value: 'AR', label: 'Arunachal Pradesh' },
-  { value: 'AS', label: 'Assam' },
-  { value: 'BR', label: 'Bihar' },
-  { value: 'CH', label: 'Chandigarh' },
-  { value: 'CT', label: 'Chhattisgarh' },
-  { value: 'DL', label: 'Delhi' },
-  { value: 'GA', label: 'Goa' },
-  { value: 'GJ', label: 'Gujarat' },
-  { value: 'HR', label: 'Haryana' },
-  { value: 'HP', label: 'Himachal Pradesh' },
-  { value: 'JK', label: 'Jammu and Kashmir' },
-  { value: 'JH', label: 'Jharkhand' },
-  { value: 'KA', label: 'Karnataka' },
-  { value: 'KL', label: 'Kerala' },
-  { value: 'MP', label: 'Madhya Pradesh' },
-  { value: 'MH', label: 'Maharashtra' },
-  { value: 'MN', label: 'Manipur' },
-  { value: 'ML', label: 'Meghalaya' },
-  { value: 'MZ', label: 'Mizoram' },
-  { value: 'NL', label: 'Nagaland' },
-  { value: 'OR', label: 'Odisha' },
-  { value: 'PB', label: 'Punjab' },
-  { value: 'RJ', label: 'Rajasthan' },
-  { value: 'SK', label: 'Sikkim' },
-  { value: 'TN', label: 'Tamil Nadu' },
-  { value: 'TG', label: 'Telangana' },
-  { value: 'TR', label: 'Tripura' },
-  { value: 'UP', label: 'Uttar Pradesh' },
-  { value: 'UT', label: 'Uttarakhand' },
-  { value: 'WB', label: 'West Bengal' }
-];
 
 const initialFormState = {
   // Required fields
@@ -299,6 +323,12 @@ export const useAddEmployee = (onSuccess) => {
     handleSubmit,
     handleDocumentChange,
     removeDocument,
-    addError
+    addError,
+    // Export options for the component to use
+    genderOptions,
+    bloodGroupOptions,
+    countryOptions,
+    indianStates,
+    salaryTypeOptions
   };
 };

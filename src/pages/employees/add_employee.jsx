@@ -30,69 +30,6 @@ import { DateInput } from '@mantine/dates';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-const genderOptions = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' }
-];
-
-const bloodGroupOptions = [
-  { value: 'A+', label: 'A+' },
-  { value: 'A-', label: 'A-' },
-  { value: 'B+', label: 'B+' },
-  { value: 'B-', label: 'B-' },
-  { value: 'O+', label: 'O+' },
-  { value: 'O-', label: 'O-' },
-  { value: 'AB+', label: 'AB+' },
-  { value: 'AB-', label: 'AB-' }
-];
-
-const countryOptions = [
-  { value: 'US', label: 'United States' },
-  { value: 'IN', label: 'India' },
-  { value: 'CA', label: 'Canada' },
-  { value: 'UK', label: 'United Kingdom' },
-  { value: 'AU', label: 'Australia' }
-];
-
-const indianStates = [
-  { value: 'AP', label: 'Andhra Pradesh' },
-  { value: 'AR', label: 'Arunachal Pradesh' },
-  { value: 'AS', label: 'Assam' },
-  { value: 'BR', label: 'Bihar' },
-  { value: 'CT', label: 'Chhattisgarh' },
-  { value: 'GA', label: 'Goa' },
-  { value: 'GJ', label: 'Gujarat' },
-  { value: 'HR', label: 'Haryana' },
-  { value: 'HP', label: 'Himachal Pradesh' },
-  { value: 'JK', label: 'Jammu and Kashmir' },
-  { value: 'JH', label: 'Jharkhand' },
-  { value: 'KA', label: 'Karnataka' },
-  { value: 'KL', label: 'Kerala' },
-  { value: 'MP', label: 'Madhya Pradesh' },
-  { value: 'MH', label: 'Maharashtra' },
-  { value: 'MN', label: 'Manipur' },
-  { value: 'ML', label: 'Meghalaya' },
-  { value: 'MZ', label: 'Mizoram' },
-  { value: 'NL', label: 'Nagaland' },
-  { value: 'OR', label: 'Odisha' },
-  { value: 'PB', label: 'Punjab' },
-  { value: 'RJ', label: 'Rajasthan' },
-  { value: 'SK', label: 'Sikkim' },
-  { value: 'TN', label: 'Tamil Nadu' },
-  { value: 'TS', label: 'Telangana' },
-  { value: 'TR', label: 'Tripura' },
-  { value: 'UP', label: 'Uttar Pradesh' },
-  { value: 'UT', label: 'Uttarakhand' },
-  { value: 'WB', label: 'West Bengal' }
-];
-
-const salaryTypeOptions = [
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'daily', label: 'Daily' },
-  { value: 'hourly', label: 'Hourly' },
-];
-
 export default function AddEmployee() {
   const navigate = useNavigate();
   const [active, setActive] = useState(0);
@@ -104,7 +41,12 @@ export default function AddEmployee() {
     designationList,
     shiftList,
     handleChange,
-    handleSubmit: onSubmit
+    handleSubmit: onSubmit,
+    genderOptions,
+    bloodGroupOptions,
+    countryOptions,
+    indianStates,
+    salaryTypeOptions
   } = useAddEmployee(() => navigate('/employees'));
 
   const handleSubmit = async (e) => {
@@ -116,8 +58,8 @@ export default function AddEmployee() {
   const prevStep = () => setActive((current) => Math.max(current - 1, 0));
 
   return (
-    <Paper radius="md" p="xl" maw={1200} mx="auto">
-      <Group justify="space-between" align="center" mb="xl">
+    <Paper radius="md" p={{ base: "md", sm: "xl" }} maw={1200} mx="auto">
+      <Group justify="space-between" align="center" mb="xl" wrap="wrap" gap="md">
         <Group>
           <ActionIcon 
             variant="light" 
@@ -127,7 +69,7 @@ export default function AddEmployee() {
           >
             <IconChevronLeft style={{ width: rem(20), height: rem(20) }} />
           </ActionIcon>
-          <Title order={2}>Add New Employee</Title>
+          <Title order={2} size={{ base: "h3", sm: "h2" }}>Add New Employee</Title>
         </Group>
         <Group>
           <Button variant="light" onClick={() => navigate('/employees')}>
@@ -158,10 +100,10 @@ export default function AddEmployee() {
             description="Basic details"
             icon={<IconUserPlus size="1.2rem" />}
           >
-            <Card withBorder shadow="sm" radius="md" p="xl" mb="xl">
-              <Grid gutter="xl">
+            <Card withBorder radius="md" p="xl" mb="xl">
+              <Grid gutter={{ base: "md", sm: "xl" }}>
 
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
                     label="First Name"
                     placeholder="John"
@@ -171,7 +113,7 @@ export default function AddEmployee() {
                     error={errors.firstName}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
                     label="Middle Name"
                     placeholder="Doe"
@@ -180,7 +122,7 @@ export default function AddEmployee() {
                     error={errors.middleName}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
                     label="Last Name"
                     placeholder="Doe"
@@ -190,7 +132,7 @@ export default function AddEmployee() {
                     error={errors.lastName}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                 <TextInput
                     label="Phone"
                     placeholder="+1 234 567 890"
@@ -200,7 +142,7 @@ export default function AddEmployee() {
                     error={errors.phone}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
                     label="Email"
                     placeholder="john.doe@example.com"
@@ -211,7 +153,7 @@ export default function AddEmployee() {
                   />
                 </Grid.Col>
 
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <DateInput
                     label="Joining Date"
                     placeholder="Select date"
@@ -221,7 +163,7 @@ export default function AddEmployee() {
                     error={errors.joiningDate}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
                     label="Department"
                     placeholder="Select department"
@@ -233,7 +175,7 @@ export default function AddEmployee() {
                     searchable
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
                     label="Designation"
                     placeholder="Select designation"
@@ -246,7 +188,7 @@ export default function AddEmployee() {
                   />
                 </Grid.Col>
 
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
                     label="Shift"
                     placeholder="Select shift"
@@ -259,7 +201,7 @@ export default function AddEmployee() {
                   />
                 </Grid.Col>
 
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
                     label="Salary Type"
                     placeholder="Select salary type"
@@ -271,7 +213,7 @@ export default function AddEmployee() {
                   />
                 </Grid.Col>
 
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <NumberInput
                     label="Salary Amount"
                     placeholder="Enter amount"
@@ -292,8 +234,8 @@ export default function AddEmployee() {
             description="Contact & Bank info"
             icon={<IconAddressBook size="1.2rem" />}
           >
-            <Card withBorder shadow="sm" radius="md" p="xl" mb="xl">
-              <Grid gutter="xl">
+            <Card withBorder radius="md" p="xl" mb="xl">
+              <Grid gutter={{ base: "md", sm: "xl" }}>
                 <Grid.Col span={12}>
                   <Textarea
                     label="Address"
@@ -304,7 +246,7 @@ export default function AddEmployee() {
                   />
                 </Grid.Col>
 
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
                     label="Country"
                     placeholder="Select country"
@@ -316,7 +258,7 @@ export default function AddEmployee() {
                     }}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   {formValues.country === 'IN' ? (
                     <Select
                       label="State"
@@ -335,7 +277,7 @@ export default function AddEmployee() {
                     />
                   )}
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
                     label="Postal Code"
                     placeholder="90001"
@@ -343,7 +285,7 @@ export default function AddEmployee() {
                     onChange={(e) => handleChange('postalCode', e.currentTarget.value)}
                   />
                 </Grid.Col>
-<Grid.Col span={4}>
+<Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
                     label="Employee ID"
                     placeholder="EMP12345"
@@ -351,7 +293,7 @@ export default function AddEmployee() {
                     onChange={(e) => handleChange('employeeCode', e.currentTarget.value)}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <DateInput
                     label="Date of Birth"
                     placeholder="Select date"
@@ -360,7 +302,7 @@ export default function AddEmployee() {
                   />
                 </Grid.Col>
 
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
                     label="Gender"
                     placeholder="Select gender"
@@ -369,7 +311,7 @@ export default function AddEmployee() {
                     onChange={(value) => handleChange('gender', value)}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
                     label="Blood Group"
                     placeholder="Select blood group"
@@ -378,7 +320,7 @@ export default function AddEmployee() {
                     onChange={(value) => handleChange('bloodGroup', value)}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
                     label="Bank Account Number"
                     placeholder="1234567890"
@@ -386,7 +328,7 @@ export default function AddEmployee() {
                     onChange={(e) => handleChange('bankAccountNumber', e.currentTarget.value)}
                   />
                 </Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
                     label="IFSC Code"
                     placeholder="ABCD1234567"
@@ -403,11 +345,11 @@ export default function AddEmployee() {
             description="Upload documents"
             icon={<IconFileUpload size="1.2rem" />}
           >
-            <Card withBorder shadow="sm" radius="md" p="xl" mb="xl">
+            <Card withBorder radius="md" p="xl" mb="xl">
               <Text size="sm" c="dimmed" mb="xl">
                 Note: Maximum 5 files per category. Each file should be less than 5MB. Images will be automatically compressed if needed.
               </Text>
-              <Grid gutter="xl">
+              <Grid gutter={{ base: "md", sm: "xl" }}>
                 {['educational', 'professional', 'identity', 'address', 'others'].map((category) => (
                   <Grid.Col span={12} key={category}>
                     <Card withBorder p="sm">
@@ -418,7 +360,7 @@ export default function AddEmployee() {
                       </Group>
                       
                       {formValues.documents[category]?.length > 0 && (
-                        <Group mb="sm">
+                        <Group mb="sm" wrap="wrap">
                           {formValues.documents[category].map((file, index) => (
                             <Button 
                               key={index}
