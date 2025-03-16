@@ -11,13 +11,19 @@ import {
   Alert,
   Grid,
   Card,
-  Textarea
+  Textarea,
+  NumberInput,
+  Text,
+  FileInput
 } from '@mantine/core';
 import { 
   IconUserPlus, 
   IconAddressBook, 
   IconChevronLeft,
-  IconAlertCircle
+  IconAlertCircle,
+  IconFileUpload,
+  IconUpload,
+  IconX
 } from '@tabler/icons-react';
 import { useAddEmployee } from '../../hooks/useAddEmployee';
 import { DateInput } from '@mantine/dates';
@@ -79,6 +85,12 @@ const indianStates = [
   { value: 'UP', label: 'Uttar Pradesh' },
   { value: 'UT', label: 'Uttarakhand' },
   { value: 'WB', label: 'West Bengal' }
+];
+
+const salaryTypeOptions = [
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'daily', label: 'Daily' },
+  { value: 'hourly', label: 'Hourly' },
 ];
 
 export default function AddEmployee() {
@@ -246,7 +258,31 @@ export default function AddEmployee() {
                     searchable
                   />
                 </Grid.Col>
-                
+
+                <Grid.Col span={4}>
+                  <Select
+                    label="Salary Type"
+                    placeholder="Select salary type"
+                    data={salaryTypeOptions}
+                    value={formValues.salaryType}
+                    onChange={(value) => handleChange('salaryType', value)}
+                    required
+                    error={errors.salaryType}
+                  />
+                </Grid.Col>
+
+                <Grid.Col span={4}>
+                  <NumberInput
+                    label="Salary Amount"
+                    placeholder="Enter amount"
+                    value={formValues.salary}
+                    onChange={(value) => handleChange('salary', value)}
+                    required
+                    error={errors.salary}
+                    min={0}
+                    precision={2}
+                  />
+                </Grid.Col>
               </Grid>
             </Card>
           </Stepper.Step>
@@ -361,6 +397,85 @@ export default function AddEmployee() {
               </Grid>
             </Card>
           </Stepper.Step>
+
+          <Stepper.Step
+            label="Documents"
+            description="Upload documents"
+            icon={<IconFileUpload size="1.2rem" />}
+          >
+            <Card withBorder shadow="sm" radius="md" p="xl" mb="xl">
+              <Text size="sm" c="dimmed" mb="xl">
+                Note: Maximum 5 files per category. Each file should be less than 5MB. Images will be automatically compressed if needed.
+              </Text>
+              <Grid gutter="xl">
+                {['educational', 'professional', 'identity', 'address', 'others'].map((category) => (
+                  <Grid.Col span={12} key={category}>
+                    <Card withBorder p="sm">
+                      <Group position="apart" mb="xs">
+                        <Text size="sm" fw={500} transform="capitalize">
+                          {category} Documents ({formValues.documents[category]?.length || 0}/5)
+                        </Text>
+                      </Group>
+                      
+                      {formValues.documents[category]?.length > 0 && (
+                        <Group mb="sm">
+                          {formValues.documents[category].map((file, index) => (
+                            <Button 
+                              key={index}
+                              variant="light"
+                              size="xs"
+                              rightIcon={
+                                <ActionIcon 
+                                  size="xs" 
+                                  color="red" 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleChange('documents', {
+                                      ...formValues.documents,
+                                      [category]: formValues.documents[category].filter((_, i) => i !== index)
+                                    });
+                                  }}
+                                >
+                                  <IconX size={rem(14)} />
+                                </ActionIcon>
+                              }
+                            >
+                              {file.name}
+                            </Button>
+                          ))}
+                        </Group>
+                      )}
+
+                      <FileInput
+                        placeholder={`Upload ${category} documents (${5 - (formValues.documents[category]?.length || 0)} remaining)`}
+                        multiple
+                        accept="application/pdf,image/*"
+                        icon={<IconUpload size={rem(14)} />}
+                        onChange={(files) => {
+                          if (files) {
+                            handleChange('documents', {
+                              ...formValues.documents,
+                              [category]: [
+                                ...(formValues.documents[category] || []),
+                                ...files.slice(0, 5 - (formValues.documents[category]?.length || 0))
+                              ]
+                            });
+                          }
+                        }}
+                        error={errors[`documents.${category}`]}
+                        disabled={formValues.documents[category]?.length >= 5}
+                      />
+                      {formValues.documents[category]?.length >= 5 && (
+                        <Text size="xs" c="dimmed" mt="xs">
+                          Maximum number of files reached
+                        </Text>
+                      )}
+                    </Card>
+                  </Grid.Col>
+                ))}
+              </Grid>
+            </Card>
+          </Stepper.Step>
         </Stepper>
 
         <Group justify="space-between" mt="xl">
@@ -371,7 +486,7 @@ export default function AddEmployee() {
           >
             Back
           </Button>
-          {active === 1 ? (
+          {active === 2 ? (
             <Button type="submit" loading={loading}>
               Save Employee
             </Button>

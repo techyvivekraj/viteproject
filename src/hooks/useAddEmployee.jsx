@@ -10,6 +10,62 @@ import { selectDesignations } from '../store/slices/organisation/designationSlic
 import { selectShifts } from '../store/slices/organisation/shiftSlice';
 import { selectAddEmployeeStatus, selectAddEmployeeError } from '../store/slices/employeesSlice';
 
+// File handling utilities
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const MAX_FILES_PER_CATEGORY = 5;
+
+const compressImage = async (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Calculate new dimensions while maintaining aspect ratio
+        if (width > height) {
+          if (width > 1920) {
+            height *= 1920 / width;
+            width = 1920;
+          }
+        } else {
+          if (height > 1920) {
+            width *= 1920 / height;
+            height = 1920;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to blob with reduced quality
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          }));
+        }, 'image/jpeg', 0.7); // Adjust quality here (0.7 = 70% quality)
+      };
+    };
+  });
+};
+
+const processFile = async (file) => {
+  if (file.size <= MAX_FILE_SIZE) return file;
+  
+  if (file.type.startsWith('image/')) {
+    return await compressImage(file);
+  }
+  
+  throw new Error(`File ${file.name} is too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`);
+};
+
 const countryOptions = [
   { value: 'US', label: 'United States' },
   { value: 'IN', label: 'India' },
@@ -63,6 +119,8 @@ const initialFormState = {
   departmentId: '',
   designationId: '',
   shiftId: '',
+  salaryType: '', // Required
+  salary: '', // Required
   
   // Optional fields
   employeeCode: '',
@@ -75,7 +133,16 @@ const initialFormState = {
   postalCode: '',
   reportingManagerId: '',
   bankAccountNumber: '',
-  bankIfscCode: ''
+  bankIfscCode: '',
+  
+  // Document fields
+  documents: {
+    educational: [],
+    professional: [],
+    identity: [],
+    address: [],
+    others: []
+  }
 };
 
 export const useAddEmployee = (onSuccess) => {
@@ -130,6 +197,18 @@ export const useAddEmployee = (onSuccess) => {
     if (!formValues.departmentId) newErrors.departmentId = 'Department is required';
     if (!formValues.designationId) newErrors.designationId = 'Designation is required';
     if (!formValues.shiftId) newErrors.shiftId = 'Shift is required';
+    if (!formValues.salaryType) newErrors.salaryType = 'Salary type is required';
+    if (!formValues.salary) newErrors.salary = 'Salary amount is required';
+    else if (isNaN(formValues.salary) || Number(formValues.salary) <= 0) {
+      newErrors.salary = 'Please enter a valid salary amount';
+    }
+
+    // Document validation
+    Object.entries(formValues.documents).forEach(([category, files]) => {
+      if (files.length > MAX_FILES_PER_CATEGORY) {
+        newErrors[`documents.${category}`] = `Maximum ${MAX_FILES_PER_CATEGORY} files allowed`;
+      }
+    });
 
     return newErrors;
   }, [formValues]);
@@ -157,6 +236,50 @@ export const useAddEmployee = (onSuccess) => {
     }
   }, [formValues, validate, organizationId, dispatch, onSuccess]);
 
+  const handleDocumentChange = useCallback(async (category, files) => {
+    try {
+      const currentFiles = formValues.documents[category] || [];
+      const remainingSlots = MAX_FILES_PER_CATEGORY - currentFiles.length;
+      
+      if (files.length > remainingSlots) {
+        showError(`You can only add ${remainingSlots} more file(s) to ${category} documents`);
+        return;
+      }
+
+      const processedFiles = [];
+      for (const file of files) {
+        try {
+          const processedFile = await processFile(file);
+          processedFiles.push(processedFile);
+        } catch (error) {
+          showError(error.message);
+        }
+      }
+
+      if (processedFiles.length > 0) {
+        setFormValues(prev => ({
+          ...prev,
+          documents: {
+            ...prev.documents,
+            [category]: [...currentFiles, ...processedFiles]
+          }
+        }));
+      }
+    } catch (error) {
+      showError('Error processing files');
+    }
+  }, [formValues.documents]);
+
+  const removeDocument = useCallback((category, index) => {
+    setFormValues(prev => ({
+      ...prev,
+      documents: {
+        ...prev.documents,
+        [category]: prev.documents[category].filter((_, i) => i !== index)
+      }
+    }));
+  }, []);
+
   // Reset form when successfully added
   useEffect(() => {
     if (addStatus === 'succeeded') {
@@ -174,6 +297,8 @@ export const useAddEmployee = (onSuccess) => {
     shiftList,
     handleChange,
     handleSubmit,
+    handleDocumentChange,
+    removeDocument,
     addError
   };
 };
