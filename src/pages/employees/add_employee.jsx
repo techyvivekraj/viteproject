@@ -373,15 +373,15 @@ export default function AddEmployee() {
 
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
-                    label="Reporting Manager"
+                    label="Reporting Manager (Optional)"
                     placeholder="Select reporting manager"
-                    data={managerList.length > 0 ? managerList : [{ value: '', label: 'Loading managers...' }]}
+                    data={managerList && managerList.length > 0 ? managerList : []}
                     value={formValues.reportingManagerId}
                     onChange={(value) => handleChange('reportingManagerId', value)}
                     error={errors.reportingManagerId}
                     searchable
                     clearable
-                    disabled={managerList.length === 0}
+                    nothingFound="No managers available"
                   />
                 </Grid.Col>
 

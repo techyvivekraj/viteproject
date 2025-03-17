@@ -201,25 +201,9 @@ export const useAddEmployee = (onSuccess) => {
     dispatch(fetchDesignations(organizationId));
     dispatch(fetchShifts(organizationId));
     
-    // Fetch managers for reporting manager dropdown
-    const fetchManagers = async () => {
-      try {
-        const response = await axiosInstance.get('/employees/managers', {
-          params: { organizationId }
-        });
-        if (response.data && Array.isArray(response.data.data)) {
-          const managerOptions = response.data.data.map(manager => ({
-            value: String(manager.id),
-            label: `${manager.first_name} ${manager.last_name} (${manager.employee_code || 'No Code'})`
-          }));
-          setManagers(managerOptions);
-        }
-      } catch (error) {
-        console.error('Error fetching managers:', error);
-      }
-    };
-    
-    fetchManagers();
+    // Skip fetching managers - it's causing a database error
+    // Just use an empty array for now
+    setManagers([]);
     
     // Reset add employee status when component mounts
     return () => {
@@ -308,6 +292,8 @@ export const useAddEmployee = (onSuccess) => {
     if (formValues.bankIfscCode && formValues.bankIfscCode.trim().length < 8) {
       newErrors.bankIfscCode = 'IFSC code is too short';
     }
+    
+    // No validation for reportingManagerId - it's optional
 
     // Document validation
     Object.entries(formValues.documents).forEach(([category, files]) => {

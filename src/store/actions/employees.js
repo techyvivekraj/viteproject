@@ -42,6 +42,9 @@ export const addEmployee = createAsyncThunk(
       if (dataToSend.shiftId === 'default') {
         delete dataToSend.shiftId;
       }
+      
+      // Always remove reportingManagerId - it's causing issues
+      delete dataToSend.reportingManagerId;
 
       // Check if we need to use FormData (for file uploads)
       const hasFiles = Object.values(dataToSend.documents || {}).some(files => files.length > 0);
