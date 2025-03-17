@@ -46,6 +46,7 @@ export default function AddEmployee() {
     departmentList,
     designationList,
     shiftList,
+    managerList,
     handleChange,
     handleSubmit: onSubmit,
     handleDocumentChange,
@@ -58,11 +59,63 @@ export default function AddEmployee() {
   } = useAddEmployee(() => navigate('/employees'));
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
+    
+    // Validate all steps before submitting
+    const allErrors = {};
+    
+    // Temporarily set active to each step and validate
+    const originalActive = active;
+    
+    // Validate step 0
+    setActive(0);
+    const step0Errors = validateCurrentStep();
+    Object.assign(allErrors, step0Errors);
+    
+    // Validate step 1
+    setActive(1);
+    const step1Errors = validateCurrentStep();
+    Object.assign(allErrors, step1Errors);
+    
+    // Validate step 2
+    setActive(2);
+    const step2Errors = validateCurrentStep();
+    Object.assign(allErrors, step2Errors);
+    
+    // Restore original active step
+    setActive(originalActive);
+    
+    if (Object.keys(allErrors).length > 0) {
+      // Set errors to display to the user
+      setErrors(prev => ({ ...prev, ...allErrors }));
+      
+      // Show the first error as a toast for better visibility
+      const firstError = Object.values(allErrors)[0];
+      showError(firstError);
+      
+      // Navigate to the first step with errors
+      if (Object.keys(step0Errors).length > 0) {
+        setActive(0);
+      } else if (Object.keys(step1Errors).length > 0) {
+        setActive(1);
+      } else if (Object.keys(step2Errors).length > 0) {
+        setActive(2);
+      }
+      
+      return; // Don't submit if there are errors
+    }
+    
+    // If no errors, submit the form
+    console.log('Submitting form with all data:', formValues);
     await onSubmit();
   };
 
-  const nextStep = () => {
+  const nextStep = (e) => {
+    // Prevent form submission if this is triggered by a button click
+    if (e) {
+      e.preventDefault();
+    }
+    
     const currentStepErrors = validateCurrentStep();
     
     if (Object.keys(currentStepErrors).length > 0) {
@@ -79,7 +132,13 @@ export default function AddEmployee() {
     setActive((current) => Math.min(current + 1, 2));
   };
   
-  const prevStep = () => setActive((current) => Math.max(current - 1, 0));
+  const prevStep = (e) => {
+    // Prevent form submission if this is triggered by a button click
+    if (e) {
+      e.preventDefault();
+    }
+    setActive((current) => Math.max(current - 1, 0));
+  };
 
   // Validate only the fields in the current step
   const validateCurrentStep = () => {
@@ -96,9 +155,12 @@ export default function AddEmployee() {
         currentStepErrors.email = 'Invalid email address';
       }
       if (!formValues.joiningDate) currentStepErrors.joiningDate = 'Joining date is required';
+      
+      // Department, designation, and shift can be either a specific value or 'default'
       if (!formValues.departmentId) currentStepErrors.departmentId = 'Department is required';
       if (!formValues.designationId) currentStepErrors.designationId = 'Designation is required';
       if (!formValues.shiftId) currentStepErrors.shiftId = 'Shift is required';
+      
       if (!formValues.salaryType) currentStepErrors.salaryType = 'Salary type is required';
       if (!formValues.salary) currentStepErrors.salary = 'Salary amount is required';
       else if (isNaN(formValues.salary) || Number(formValues.salary) <= 0) {
@@ -166,10 +228,10 @@ export default function AddEmployee() {
           <Title order={2} size={{ base: "h3", sm: "h2" }}>Add New Employee</Title>
         </Group>
         <Group>
-          <Button variant="light" onClick={() => navigate('/employees')}>
+          <Button variant="light" onClick={() => navigate('/employees')} type="button">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={loading}>
+          <Button form="employee-form" type="submit" loading={loading}>
             Save Employee
           </Button>
         </Group>
@@ -181,7 +243,7 @@ export default function AddEmployee() {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form id="employee-form" onSubmit={handleSubmit}>
         <Stepper 
           active={active} 
           onStepClick={setActive}
@@ -306,6 +368,20 @@ export default function AddEmployee() {
                     error={errors.shiftId}
                     searchable
                     disabled={shiftList.length === 0}
+                  />
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                  <Select
+                    label="Reporting Manager"
+                    placeholder="Select reporting manager"
+                    data={managerList.length > 0 ? managerList : [{ value: '', label: 'Loading managers...' }]}
+                    value={formValues.reportingManagerId}
+                    onChange={(value) => handleChange('reportingManagerId', value)}
+                    error={errors.reportingManagerId}
+                    searchable
+                    clearable
+                    disabled={managerList.length === 0}
                   />
                 </Grid.Col>
 
@@ -526,6 +602,7 @@ export default function AddEmployee() {
             variant="default" 
             onClick={prevStep}
             disabled={active === 0}
+            type="button" // Explicitly set type to button to prevent form submission
           >
             Back
           </Button>
@@ -534,7 +611,7 @@ export default function AddEmployee() {
               Save Employee
             </Button>
           ) : (
-            <Button onClick={nextStep}>
+            <Button onClick={nextStep} type="button"> {/* Explicitly set type to button */}
               Next
             </Button>
           )}

@@ -25,16 +25,33 @@ export const addEmployee = createAsyncThunk(
       if (!employeeData.employeeCode) {
         employeeData.employeeCode = `EMP${Date.now().toString().slice(-6)}`;
       }
+      
+      // Handle default values for department, designation, and shift
+      const dataToSend = { ...employeeData };
+      
+      // If default values are selected, remove them from the request
+      // The API will assign default values on the backend
+      if (dataToSend.departmentId === 'default') {
+        delete dataToSend.departmentId;
+      }
+      
+      if (dataToSend.designationId === 'default') {
+        delete dataToSend.designationId;
+      }
+      
+      if (dataToSend.shiftId === 'default') {
+        delete dataToSend.shiftId;
+      }
 
       // Check if we need to use FormData (for file uploads)
-      const hasFiles = Object.values(employeeData.documents || {}).some(files => files.length > 0);
+      const hasFiles = Object.values(dataToSend.documents || {}).some(files => files.length > 0);
       
       if (hasFiles) {
         // Create FormData for file uploads
         const formData = new FormData();
         
         // Add all employee data to FormData
-        Object.entries(employeeData).forEach(([key, value]) => {
+        Object.entries(dataToSend).forEach(([key, value]) => {
           if (key !== 'documents' && value !== null && value !== undefined && value !== '') {
             // Handle arrays and objects by converting to JSON strings
             if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
@@ -46,8 +63,8 @@ export const addEmployee = createAsyncThunk(
         });
         
         // Add documents if any
-        if (employeeData.documents) {
-          Object.entries(employeeData.documents).forEach(([category, files]) => {
+        if (dataToSend.documents) {
+          Object.entries(dataToSend.documents).forEach(([category, files]) => {
             if (files && files.length > 0) {
               files.forEach((file, index) => {
                 formData.append(`documents[${category}][${index}]`, file);
@@ -67,8 +84,8 @@ export const addEmployee = createAsyncThunk(
         return response.data;
       } else {
         // No files, use regular JSON request
-        console.log('Sending JSON data:', employeeData);
-        const response = await axiosInstance.post('/employees', employeeData);
+        console.log('Sending JSON data:', dataToSend);
+        const response = await axiosInstance.post('/employees', dataToSend);
         return response.data;
       }
     } catch (error) {

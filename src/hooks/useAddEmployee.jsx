@@ -9,6 +9,7 @@ import { selectDepartments } from '../store/slices/organisation/deptSlice';
 import { selectDesignations } from '../store/slices/organisation/designationSlice';
 import { selectShifts } from '../store/slices/organisation/shiftSlice';
 import { selectAddEmployeeStatus, selectAddEmployeeError, resetAddEmployeeStatus } from '../store/slices/employeesSlice';
+import { axiosInstance } from '../components/api';
 
 // Constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -158,6 +159,7 @@ const initialFormState = {
   postalCode: '',
   bankAccountNumber: '',
   bankIfscCode: '',
+  reportingManagerId: '', // Added reporting manager field
   
   // Document fields
   documents: {
@@ -172,6 +174,7 @@ const initialFormState = {
 export const useAddEmployee = (onSuccess) => {
   const [formValues, setFormValues] = useState(initialFormState);
   const [errors, setErrors] = useState({});
+  const [managers, setManagers] = useState([]);
   
   const dispatch = useDispatch();
   const organizationId = localStorage.getItem('orgId');
@@ -198,6 +201,26 @@ export const useAddEmployee = (onSuccess) => {
     dispatch(fetchDesignations(organizationId));
     dispatch(fetchShifts(organizationId));
     
+    // Fetch managers for reporting manager dropdown
+    const fetchManagers = async () => {
+      try {
+        const response = await axiosInstance.get('/employees/managers', {
+          params: { organizationId }
+        });
+        if (response.data && Array.isArray(response.data.data)) {
+          const managerOptions = response.data.data.map(manager => ({
+            value: String(manager.id),
+            label: `${manager.first_name} ${manager.last_name} (${manager.employee_code || 'No Code'})`
+          }));
+          setManagers(managerOptions);
+        }
+      } catch (error) {
+        console.error('Error fetching managers:', error);
+      }
+    };
+    
+    fetchManagers();
+    
     // Reset add employee status when component mounts
     return () => {
       dispatch(resetAddEmployeeStatus());
@@ -209,16 +232,34 @@ export const useAddEmployee = (onSuccess) => {
     value: String(dept.id),
     label: dept.name
   })) || [];
+  
+  // Add default option to department list
+  const departmentListWithDefault = [
+    { value: 'default', label: 'Default Department' },
+    ...departmentList
+  ];
 
   const designationList = designations?.data?.map(desig => ({
     value: String(desig.id),
     label: desig.name
   })) || [];
+  
+  // Add default option to designation list
+  const designationListWithDefault = [
+    { value: 'default', label: 'Default Designation' },
+    ...designationList
+  ];
 
   const shiftList = shifts?.data?.map(shift => ({
     value: String(shift.id),
     label: shift.name
   })) || [];
+  
+  // Add default option to shift list
+  const shiftListWithDefault = [
+    { value: 'default', label: 'Default Shift' },
+    ...shiftList
+  ];
 
   const validate = useCallback(() => {
     const newErrors = {};
@@ -448,9 +489,10 @@ export const useAddEmployee = (onSuccess) => {
     errors,
     setErrors, // Export setErrors to allow the component to set errors directly
     loading: addStatus === 'loading',
-    departmentList,
-    designationList,
-    shiftList,
+    departmentList: departmentListWithDefault,
+    designationList: designationListWithDefault,
+    shiftList: shiftListWithDefault,
+    managerList: managers,
     handleChange,
     handleSubmit,
     handleDocumentChange,
