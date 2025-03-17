@@ -8,7 +8,7 @@ import { fetchShifts } from '../store/actions/organisation/shift';
 import { selectDepartments } from '../store/slices/organisation/deptSlice';
 import { selectDesignations } from '../store/slices/organisation/designationSlice';
 import { selectShifts } from '../store/slices/organisation/shiftSlice';
-import { selectAddEmployeeStatus, selectAddEmployeeError } from '../store/slices/employeesSlice';
+import { selectAddEmployeeStatus, selectAddEmployeeError, resetAddEmployeeStatus } from '../store/slices/employeesSlice';
 
 // Constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -145,9 +145,10 @@ const initialFormState = {
   shiftId: '',
   salaryType: '', // Required
   salary: '', // Required
+  employeeCode: '', // Required
   
   // Optional fields
-  employeeCode: '',
+  middleName: '',
   dateOfBirth: '',
   gender: '',
   bloodGroup: '',
@@ -155,7 +156,6 @@ const initialFormState = {
   country: '',
   state: '',
   postalCode: '',
-  reportingManagerId: '',
   bankAccountNumber: '',
   bankIfscCode: '',
   
@@ -183,11 +183,25 @@ export const useAddEmployee = (onSuccess) => {
   const addStatus = useSelector(selectAddEmployeeStatus);
   const addError = useSelector(selectAddEmployeeError);
 
+  // Generate employee code on mount
+  useEffect(() => {
+    // Generate a unique employee code if not already set
+    if (!formValues.employeeCode) {
+      const randomCode = `EMP${Math.floor(100000 + Math.random() * 900000)}`;
+      setFormValues(prev => ({ ...prev, employeeCode: randomCode }));
+    }
+  }, []);
+
   // Load data on mount
   useEffect(() => {
     dispatch(fetchDepartments(organizationId));
     dispatch(fetchDesignations(organizationId));
     dispatch(fetchShifts(organizationId));
+    
+    // Reset add employee status when component mounts
+    return () => {
+      dispatch(resetAddEmployeeStatus());
+    };
   }, [dispatch, organizationId]);
 
   // Transform data for dropdowns
@@ -209,7 +223,7 @@ export const useAddEmployee = (onSuccess) => {
   const validate = useCallback(() => {
     const newErrors = {};
     
-    // Required fields validation
+    // Required fields validation - only validate fields that are truly required by the API
     if (!formValues.firstName?.trim()) newErrors.firstName = 'First name is required';
     if (!formValues.lastName?.trim()) newErrors.lastName = 'Last name is required';
     if (!formValues.phone?.trim()) newErrors.phone = 'Phone number is required';
@@ -226,12 +240,46 @@ export const useAddEmployee = (onSuccess) => {
     else if (isNaN(formValues.salary) || Number(formValues.salary) <= 0) {
       newErrors.salary = 'Please enter a valid salary amount';
     }
+    if (!formValues.employeeCode?.trim()) newErrors.employeeCode = 'Employee code is required';
+
+    // Optional fields validation - only validate format if a value is provided
+    // Don't make these fields required
+    if (formValues.email && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formValues.email)) {
+      newErrors.email = 'Invalid email address';
+    }
+    
+    // Relaxed phone validation - many formats are valid
+    if (formValues.phone && formValues.phone.trim().length < 6) {
+      newErrors.phone = 'Phone number is too short';
+    }
+    
+    // Relaxed postal code validation
+    if (formValues.postalCode && formValues.postalCode.trim().length < 4) {
+      newErrors.postalCode = 'Postal code is too short';
+    }
+    
+    // Relaxed bank account validation
+    if (formValues.bankAccountNumber && formValues.bankAccountNumber.trim().length < 8) {
+      newErrors.bankAccountNumber = 'Bank account number is too short';
+    }
+    
+    // Relaxed IFSC code validation
+    if (formValues.bankIfscCode && formValues.bankIfscCode.trim().length < 8) {
+      newErrors.bankIfscCode = 'IFSC code is too short';
+    }
 
     // Document validation
     Object.entries(formValues.documents).forEach(([category, files]) => {
       if (files.length > MAX_FILES_PER_CATEGORY) {
         newErrors[`documents.${category}`] = `Maximum ${MAX_FILES_PER_CATEGORY} files allowed`;
       }
+      
+      // Check file sizes
+      files.forEach(file => {
+        if (file.size > MAX_FILE_SIZE) {
+          newErrors[`documents.${category}`] = `File ${file.name} exceeds maximum size of 5MB`;
+        }
+      });
     });
 
     return newErrors;
@@ -246,17 +294,76 @@ export const useAddEmployee = (onSuccess) => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      
+      // Show the first error as a toast for better visibility
+      const firstError = Object.values(validationErrors)[0];
+      showError(firstError);
       return;
     }
 
     try {
-      await dispatch(addEmployee({ ...formValues, organizationId })).unwrap();
+      // Format dates for API
+      const formattedData = {
+        ...formValues,
+        organizationId,
+        joiningDate: formValues.joiningDate instanceof Date 
+          ? formValues.joiningDate.toISOString().split('T')[0] 
+          : formValues.joiningDate,
+        dateOfBirth: formValues.dateOfBirth instanceof Date 
+          ? formValues.dateOfBirth.toISOString().split('T')[0] 
+          : formValues.dateOfBirth
+      };
+
+      // Clean up empty fields to avoid API validation errors
+      Object.keys(formattedData).forEach(key => {
+        if (formattedData[key] === '' || formattedData[key] === null || formattedData[key] === undefined) {
+          delete formattedData[key];
+        }
+      });
+
+      // Clean up empty document categories
+      if (formattedData.documents) {
+        Object.keys(formattedData.documents).forEach(category => {
+          if (!formattedData.documents[category] || formattedData.documents[category].length === 0) {
+            delete formattedData.documents[category];
+          }
+        });
+        
+        // If no documents left, delete the documents object
+        if (Object.keys(formattedData.documents).length === 0) {
+          delete formattedData.documents;
+        }
+      }
+
+      console.log('Submitting employee data:', formattedData);
+      await dispatch(addEmployee(formattedData)).unwrap();
       showToast('Employee added successfully');
       setFormValues(initialFormState);
       if (onSuccess) onSuccess();
     } catch (error) {
-      showError(error.message || 'Failed to add employee');
-      setErrors({ general: 'Failed to add employee. Please try again.' });
+      console.error('Error adding employee:', error);
+      
+      if (error.errors && Array.isArray(error.errors)) {
+        // Handle structured validation errors from the backend
+        const backendErrors = {};
+        error.errors.forEach(err => {
+          // Convert backend field names to frontend field names if needed
+          const fieldName = err.field === 'employee_code' ? 'employeeCode' : err.field;
+          backendErrors[fieldName] = err.message;
+        });
+        setErrors(prev => ({ ...prev, ...backendErrors }));
+        
+        // Show the first error as a toast
+        if (error.errors.length > 0) {
+          showError(error.errors[0].message);
+        } else {
+          showError(error.message || 'Failed to add employee');
+        }
+      } else {
+        // Handle general error
+        showError(error.message || 'Failed to add employee');
+        setErrors({ general: 'Failed to add employee. Please try again.' });
+      }
     }
   }, [formValues, validate, organizationId, dispatch, onSuccess]);
 
@@ -309,12 +416,37 @@ export const useAddEmployee = (onSuccess) => {
     if (addStatus === 'succeeded') {
       setFormValues(initialFormState);
       setErrors({});
+    } else if (addStatus === 'failed' && addError) {
+      // Display specific error messages from the backend
+      if (typeof addError === 'object') {
+        if (addError.errors && Array.isArray(addError.errors)) {
+          const backendErrors = {};
+          addError.errors.forEach(err => {
+            // Convert backend field names to frontend field names if needed
+            const fieldName = err.field === 'employee_code' ? 'employeeCode' : err.field;
+            backendErrors[fieldName] = err.message;
+          });
+          setErrors(prev => ({ ...prev, ...backendErrors }));
+          
+          // Show the first error as a toast
+          if (addError.errors.length > 0) {
+            showError(addError.errors[0].message);
+          }
+        } else if (addError.message) {
+          setErrors(prev => ({ ...prev, general: addError.message }));
+          showError(addError.message);
+        }
+      } else if (typeof addError === 'string') {
+        setErrors(prev => ({ ...prev, general: addError }));
+        showError(addError);
+      }
     }
-  }, [addStatus]);
+  }, [addStatus, addError]);
 
   return {
     formValues,
     errors,
+    setErrors, // Export setErrors to allow the component to set errors directly
     loading: addStatus === 'loading',
     departmentList,
     designationList,

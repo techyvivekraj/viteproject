@@ -29,6 +29,11 @@ import { useAddEmployee } from '../../hooks/useAddEmployee';
 import { DateInput } from '@mantine/dates';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { showError } from '../../components/api';
+
+// Constants
+const MAX_FILES_PER_CATEGORY = 5;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 export default function AddEmployee() {
   const navigate = useNavigate();
@@ -36,12 +41,15 @@ export default function AddEmployee() {
   const {
     formValues,
     errors,
+    setErrors,
     loading,
     departmentList,
     designationList,
     shiftList,
     handleChange,
     handleSubmit: onSubmit,
+    handleDocumentChange,
+    removeDocument,
     genderOptions,
     bloodGroupOptions,
     countryOptions,
@@ -54,8 +62,94 @@ export default function AddEmployee() {
     await onSubmit();
   };
 
-  const nextStep = () => setActive((current) => Math.min(current + 1, 2));
+  const nextStep = () => {
+    const currentStepErrors = validateCurrentStep();
+    
+    if (Object.keys(currentStepErrors).length > 0) {
+      // Set errors to display to the user
+      setErrors(prev => ({ ...prev, ...currentStepErrors }));
+      
+      // Show the first error as a toast for better visibility
+      const firstError = Object.values(currentStepErrors)[0];
+      showError(firstError);
+      return; // Don't proceed if there are errors
+    }
+    
+    // If no errors, proceed to next step
+    setActive((current) => Math.min(current + 1, 2));
+  };
+  
   const prevStep = () => setActive((current) => Math.max(current - 1, 0));
+
+  // Validate only the fields in the current step
+  const validateCurrentStep = () => {
+    const currentStepErrors = {};
+    
+    if (active === 0) {
+      // Required information step - only validate fields that are truly required by the API
+      if (!formValues.employeeCode?.trim()) currentStepErrors.employeeCode = 'Employee code is required';
+      if (!formValues.firstName?.trim()) currentStepErrors.firstName = 'First name is required';
+      if (!formValues.lastName?.trim()) currentStepErrors.lastName = 'Last name is required';
+      if (!formValues.phone?.trim()) currentStepErrors.phone = 'Phone number is required';
+      if (!formValues.email?.trim()) currentStepErrors.email = 'Email is required';
+      else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formValues.email)) {
+        currentStepErrors.email = 'Invalid email address';
+      }
+      if (!formValues.joiningDate) currentStepErrors.joiningDate = 'Joining date is required';
+      if (!formValues.departmentId) currentStepErrors.departmentId = 'Department is required';
+      if (!formValues.designationId) currentStepErrors.designationId = 'Designation is required';
+      if (!formValues.shiftId) currentStepErrors.shiftId = 'Shift is required';
+      if (!formValues.salaryType) currentStepErrors.salaryType = 'Salary type is required';
+      if (!formValues.salary) currentStepErrors.salary = 'Salary amount is required';
+      else if (isNaN(formValues.salary) || Number(formValues.salary) <= 0) {
+        currentStepErrors.salary = 'Please enter a valid salary amount';
+      }
+    } else if (active === 1) {
+      // Additional details step - only validate format if a value is provided
+      // Don't make these fields required
+      
+      // Only validate email format if provided
+      if (formValues.email && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formValues.email)) {
+        currentStepErrors.email = 'Invalid email address';
+      }
+      
+      // Only validate phone format if provided
+      if (formValues.phone && formValues.phone.trim().length < 6) {
+        currentStepErrors.phone = 'Phone number is too short';
+      }
+      
+      // Only validate postal code format if provided
+      if (formValues.postalCode && formValues.postalCode.trim().length < 4) {
+        currentStepErrors.postalCode = 'Postal code is too short';
+      }
+      
+      // Only validate bank account format if provided
+      if (formValues.bankAccountNumber && formValues.bankAccountNumber.trim().length < 8) {
+        currentStepErrors.bankAccountNumber = 'Bank account number is too short';
+      }
+      
+      // Only validate IFSC code format if provided
+      if (formValues.bankIfscCode && formValues.bankIfscCode.trim().length < 8) {
+        currentStepErrors.bankIfscCode = 'IFSC code is too short';
+      }
+    } else if (active === 2) {
+      // Document validation
+      Object.entries(formValues.documents).forEach(([category, files]) => {
+        if (files.length > MAX_FILES_PER_CATEGORY) {
+          currentStepErrors[`documents.${category}`] = `Maximum ${MAX_FILES_PER_CATEGORY} files allowed`;
+        }
+        
+        // Check file sizes
+        files.forEach(file => {
+          if (file.size > MAX_FILE_SIZE) {
+            currentStepErrors[`documents.${category}`] = `File ${file.name} exceeds maximum size of 5MB`;
+          }
+        });
+      });
+    }
+    
+    return currentStepErrors;
+  };
 
   return (
     <Paper radius="md" p={{ base: "md", sm: "xl" }} maw={1200} mx="auto">
@@ -102,6 +196,17 @@ export default function AddEmployee() {
           >
             <Card withBorder radius="md" p="xl" mb="xl">
               <Grid gutter={{ base: "md", sm: "xl" }}>
+
+                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                  <TextInput
+                    label="Employee Code"
+                    placeholder="EMP12345"
+                    value={formValues.employeeCode}
+                    onChange={(e) => handleChange('employeeCode', e.currentTarget.value)}
+                    required
+                    error={errors.employeeCode}
+                  />
+                </Grid.Col>
 
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <TextInput
@@ -167,24 +272,26 @@ export default function AddEmployee() {
                   <Select
                     label="Department"
                     placeholder="Select department"
-                    data={[{ value: '', label: 'Select department' }, ...departmentList]}
+                    data={departmentList.length > 0 ? departmentList : [{ value: '', label: 'Loading departments...' }]}
                     value={formValues.departmentId}
                     onChange={(value) => handleChange('departmentId', value)}
                     required
                     error={errors.departmentId}
                     searchable
+                    disabled={departmentList.length === 0}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Select
                     label="Designation"
                     placeholder="Select designation"
-                    data={[{ value: '', label: 'Select designation' }, ...designationList]}
+                    data={designationList.length > 0 ? designationList : [{ value: '', label: 'Loading designations...' }]}
                     value={formValues.designationId}
                     onChange={(value) => handleChange('designationId', value)}
                     required
                     error={errors.designationId}
                     searchable
+                    disabled={designationList.length === 0}
                   />
                 </Grid.Col>
 
@@ -192,12 +299,13 @@ export default function AddEmployee() {
                   <Select
                     label="Shift"
                     placeholder="Select shift"
-                    data={[{ value: '', label: 'Select shift' }, ...shiftList]}
+                    data={shiftList.length > 0 ? shiftList : [{ value: '', label: 'Loading shifts...' }]}
                     value={formValues.shiftId}
                     onChange={(value) => handleChange('shiftId', value)}
                     required
                     error={errors.shiftId}
                     searchable
+                    disabled={shiftList.length === 0}
                   />
                 </Grid.Col>
 
@@ -243,6 +351,7 @@ export default function AddEmployee() {
                     value={formValues.address}
                     onChange={(e) => handleChange('address', e.currentTarget.value)}
                     minRows={3}
+                    error={errors.address}
                   />
                 </Grid.Col>
 
@@ -256,6 +365,7 @@ export default function AddEmployee() {
                       handleChange('country', value);
                       handleChange('state', '');
                     }}
+                    error={errors.country}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
@@ -267,6 +377,7 @@ export default function AddEmployee() {
                       value={formValues.state}
                       onChange={(value) => handleChange('state', value)}
                       searchable
+                      error={errors.state}
                     />
                   ) : (
                     <TextInput
@@ -274,6 +385,7 @@ export default function AddEmployee() {
                       placeholder="Enter state/province"
                       value={formValues.state}
                       onChange={(e) => handleChange('state', e.currentTarget.value)}
+                      error={errors.state}
                     />
                   )}
                 </Grid.Col>
@@ -283,14 +395,7 @@ export default function AddEmployee() {
                     placeholder="90001"
                     value={formValues.postalCode}
                     onChange={(e) => handleChange('postalCode', e.currentTarget.value)}
-                  />
-                </Grid.Col>
-<Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                  <TextInput
-                    label="Employee ID"
-                    placeholder="EMP12345"
-                    value={formValues.employeeCode}
-                    onChange={(e) => handleChange('employeeCode', e.currentTarget.value)}
+                    error={errors.postalCode}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
@@ -299,6 +404,7 @@ export default function AddEmployee() {
                     placeholder="Select date"
                     value={formValues.dateOfBirth ? new Date(formValues.dateOfBirth) : null}
                     onChange={(value) => handleChange('dateOfBirth', value)}
+                    error={errors.dateOfBirth}
                   />
                 </Grid.Col>
 
@@ -309,6 +415,7 @@ export default function AddEmployee() {
                     data={genderOptions}
                     value={formValues.gender}
                     onChange={(value) => handleChange('gender', value)}
+                    error={errors.gender}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
@@ -318,6 +425,7 @@ export default function AddEmployee() {
                     data={bloodGroupOptions}
                     value={formValues.bloodGroup}
                     onChange={(value) => handleChange('bloodGroup', value)}
+                    error={errors.bloodGroup}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
@@ -326,6 +434,7 @@ export default function AddEmployee() {
                     placeholder="1234567890"
                     value={formValues.bankAccountNumber}
                     onChange={(e) => handleChange('bankAccountNumber', e.currentTarget.value)}
+                    error={errors.bankAccountNumber}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
@@ -334,6 +443,7 @@ export default function AddEmployee() {
                     placeholder="ABCD1234567"
                     value={formValues.bankIfscCode}
                     onChange={(e) => handleChange('bankIfscCode', e.currentTarget.value)}
+                    error={errors.bankIfscCode}
                   />
                 </Grid.Col>
               </Grid>
@@ -372,10 +482,7 @@ export default function AddEmployee() {
                                   color="red" 
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    handleChange('documents', {
-                                      ...formValues.documents,
-                                      [category]: formValues.documents[category].filter((_, i) => i !== index)
-                                    });
+                                    removeDocument(category, index);
                                   }}
                                 >
                                   <IconX size={rem(14)} />
@@ -395,13 +502,7 @@ export default function AddEmployee() {
                         icon={<IconUpload size={rem(14)} />}
                         onChange={(files) => {
                           if (files) {
-                            handleChange('documents', {
-                              ...formValues.documents,
-                              [category]: [
-                                ...(formValues.documents[category] || []),
-                                ...files.slice(0, 5 - (formValues.documents[category]?.length || 0))
-                              ]
-                            });
+                            handleDocumentChange(category, files);
                           }
                         }}
                         error={errors[`documents.${category}`]}

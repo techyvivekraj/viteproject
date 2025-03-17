@@ -7,7 +7,7 @@ export const fetchEmployees = createAsyncThunk(
   async (organizationId, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get('/employees', {
-        organizationId
+        params: { organizationId }
       });
       return response.data;
     } catch (error) {
@@ -21,19 +21,67 @@ export const addEmployee = createAsyncThunk(
   'employees/addEmployee',
   async (employeeData, { rejectWithValue }) => {
     try {
-      // Convert default values to actual IDs for the API
-      const convertedData = {
-        ...employeeData,
-        departmentId: employeeData.departmentId === 'default_dept' ? '1' : employeeData.departmentId,
-        designationId: employeeData.designationId === 'default_desig' ? '1' : employeeData.designationId,
-        shiftId: employeeData.shiftId === 'default_shift' ? '1' : employeeData.shiftId,
-        organizationId: employeeData.organizationId || 1
-      };
+      // If no employee code is provided, generate one
+      if (!employeeData.employeeCode) {
+        employeeData.employeeCode = `EMP${Date.now().toString().slice(-6)}`;
+      }
 
-      const response = await axiosInstance.post('/employees', convertedData);
-      return response.data;
+      // Check if we need to use FormData (for file uploads)
+      const hasFiles = Object.values(employeeData.documents || {}).some(files => files.length > 0);
+      
+      if (hasFiles) {
+        // Create FormData for file uploads
+        const formData = new FormData();
+        
+        // Add all employee data to FormData
+        Object.entries(employeeData).forEach(([key, value]) => {
+          if (key !== 'documents' && value !== null && value !== undefined && value !== '') {
+            // Handle arrays and objects by converting to JSON strings
+            if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+              formData.append(key, JSON.stringify(value));
+            } else {
+              formData.append(key, value);
+            }
+          }
+        });
+        
+        // Add documents if any
+        if (employeeData.documents) {
+          Object.entries(employeeData.documents).forEach(([category, files]) => {
+            if (files && files.length > 0) {
+              files.forEach((file, index) => {
+                formData.append(`documents[${category}][${index}]`, file);
+              });
+            }
+          });
+        }
+        
+        console.log('Sending form data with files');
+        
+        const response = await axiosInstance.post('/employees', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        return response.data;
+      } else {
+        // No files, use regular JSON request
+        console.log('Sending JSON data:', employeeData);
+        const response = await axiosInstance.post('/employees', employeeData);
+        return response.data;
+      }
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to add employee');
+      console.error('Error adding employee:', error);
+      
+      // Provide detailed error information
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data);
+      } else if (error.message) {
+        return rejectWithValue({ message: error.message });
+      } else {
+        return rejectWithValue({ message: 'Failed to add employee' });
+      }
     }
   }
 );
@@ -60,6 +108,19 @@ export const deleteEmployee = createAsyncThunk(
       return { id };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Failed to delete employee');
+    }
+  }
+);
+
+// Get Employee by ID
+export const getEmployeeById = createAsyncThunk(
+  'employees/getEmployeeById',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/employees/${id}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Failed to fetch employee details');
     }
   }
 );
