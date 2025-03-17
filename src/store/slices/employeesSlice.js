@@ -65,7 +65,11 @@ const employeesSlice = createSlice({
         state.addEmployeeError = null;
       })
       .addCase(addEmployee.fulfilled, (state, action) => {
+        // Log the response to see what we're getting back
+        console.log('Add employee response:', action.payload);
+        
         if (state.employees?.data && Array.isArray(state.employees.data)) {
+          // Make sure we're adding the employee with all necessary data
           state.employees.data.push(action.payload.data);
         }
         state.addEmployeeStatus = 'succeeded';

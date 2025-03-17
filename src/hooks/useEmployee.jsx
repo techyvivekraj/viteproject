@@ -47,14 +47,14 @@ export const useEmployee = () => {
       header: 'Department', 
       accessor: 'department_name',
       render: (item) => (
-        <Text>{item.department?.name || 'N/A'}</Text>
+        <Text>{item.department_name || 'N/A'}</Text>
       )
     },
     { 
       header: 'Designation', 
       accessor: 'designation_name',
       render: (item) => (
-        <Text>{item.designation?.name || 'N/A'}</Text>
+        <Text>{item.designation_name || 'N/A'}</Text>
       )
     },
     { 
@@ -103,7 +103,7 @@ export const useEmployee = () => {
           await dispatch(deleteEmployee(employee.id)).unwrap();
           showToast('Employee deleted successfully');
         } catch (error) {
-          showError('Failed to delete employee');
+          showError('Failed to delete employee'+error);
         }
       }
     });

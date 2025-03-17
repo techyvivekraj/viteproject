@@ -49,6 +49,7 @@ export const addEmployee = createAsyncThunk(
       // Check if we need to use FormData (for file uploads)
       const hasFiles = Object.values(dataToSend.documents || {}).some(files => files.length > 0);
       
+      let response;
       if (hasFiles) {
         // Create FormData for file uploads
         const formData = new FormData();
@@ -76,23 +77,17 @@ export const addEmployee = createAsyncThunk(
           });
         }
         
-        console.log('Sending form data with files');
-        
-        const response = await axiosInstance.post('/employees', formData, {
+        response = await axiosInstance.post('/employees', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
-        
-        return response.data;
       } else {
-        // No files, use regular JSON request
-        console.log('Sending JSON data:', dataToSend);
-        const response = await axiosInstance.post('/employees', dataToSend);
-        return response.data;
+        response = await axiosInstance.post('/employees', dataToSend);
       }
+      
+      return response.data;
     } catch (error) {
-      console.error('Error adding employee:', error);
       
       // Provide detailed error information
       if (error.response && error.response.data) {

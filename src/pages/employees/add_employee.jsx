@@ -381,7 +381,6 @@ export default function AddEmployee() {
                     error={errors.reportingManagerId}
                     searchable
                     clearable
-                    nothingFound="No managers available"
                   />
                 </Grid.Col>
 
