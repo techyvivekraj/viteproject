@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { Paper, Title, Text, Button, Stack, Group } from '@mantine/core';
+import PropTypes from 'prop-types';
 import { IconAlertCircle, IconRefresh } from '@tabler/icons-react';
 
 class ErrorBoundary extends Component {
@@ -50,7 +51,7 @@ class ErrorBoundary extends Component {
             </Text>
             
             {/* Show error details only in development mode */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.MODE === 'development' && this.state.error && (
               <Paper p="md" bg="var(--mantine-color-gray-0)" withBorder style={{ maxWidth: '100%', overflow: 'auto' }}>
                 <Text size="sm" color="red">
                   {this.state.error.toString()}
@@ -87,5 +88,8 @@ class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default ErrorBoundary;

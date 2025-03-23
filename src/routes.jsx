@@ -3,7 +3,7 @@ import Login from './pages/login/login';
 import Dashboard from './pages/dashboard/dashboard';
 import Layout from './layout/layout';
 import ProtectedRoute from './components/privateRoiute';
-// import Employees from './pages/employees/employees';
+import Employees from './pages/employees/employees';
 import AddEmployee from './pages/employees/add_employee';
 import Organisation from './pages/organisation/organisation';
 import NotFound from './pages/NotFound';
@@ -25,7 +25,7 @@ const Navigator = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
-          {/* <Route path="employees" element={<Employees />} /> */}
+          <Route path="employees" element={<Employees />} />
           <Route path="employees/add" element={<AddEmployee />} />
           <Route path="organisation" element={<Organisation />} />
           {/* Catch all route for 404 */}

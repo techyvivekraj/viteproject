@@ -72,6 +72,7 @@ export const useAddEmployee = () => {
             dispatch(fetchDesignations(organizationId));
             dispatch(fetchShifts(organizationId));
             setManagers([]);
+            console.log(organizationId);
         }
     }, [dispatch, lastFetch, organizationId]);
 

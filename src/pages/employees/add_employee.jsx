@@ -18,9 +18,8 @@ import {
     ActionIcon
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { IconLoader, IconInfoCircle, IconUpload, IconCheck, IconX } from '@tabler/icons-react';
+import { IconLoader, IconInfoCircle, IconUpload } from '@tabler/icons-react';
 import { useAddEmployee } from '../../hooks/useAddEmployee'
-import { showToast } from '../../components/api';
 
 export default function AddEmployee() {
     const navigate = useNavigate();
@@ -436,7 +435,6 @@ export default function AddEmployee() {
                                     placeholder="Upload other documents"
                                     multiple
                                     accept=".pdf,.doc,.docx"
-                                    maxFiles={5}
                                     onChange={(files) => handleFileChange('otherDocs', files)}
                                     icon={<IconUpload size={14} />}
                                     rightSection={
@@ -456,7 +454,7 @@ export default function AddEmployee() {
                             type="submit" 
                             loading={loading}
                             size="lg"
-                            leftIcon={<IconUpload size={20} />}
+                            // leftIcon={<IconUpload size={20} />}
                             disabled={loading}
                         >
                             {loading ? 'Saving...' : 'Save Employee'}

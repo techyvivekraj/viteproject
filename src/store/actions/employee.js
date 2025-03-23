@@ -50,12 +50,10 @@ export const updateEmployee = createAsyncThunk(
 
 // Delete Employee
 export const deleteEmployee = createAsyncThunk(
-    'organisation/deleteEmployee',
+    'employees/deleteEmployee',
     async ({ id, organizationId }, { rejectWithValue }) => {
         try {
-            await axiosInstance.delete(`/employees/${id}`, {
-                data: { organizationId }
-            });
+            await axiosInstance.delete(`/employees/${id}?organizationId=${organizationId}`);
             return { id };
         } catch (error) {
             return rejectWithValue(error.response?.data || 'Failed to delete employee');
