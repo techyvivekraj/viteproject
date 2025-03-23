@@ -10,9 +10,9 @@ const initialFormState = {
     phone: '',
     email: '',
     joiningDate: null,
-    department: '',
-    designation: '',
-    shift: '',
+    departmentId: '',
+    designationId: '',
+    shiftId: '',
     salaryType: '',
     salaryAmount: '',
 

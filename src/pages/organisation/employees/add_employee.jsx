@@ -14,9 +14,8 @@ import {
     Title,
     Group
 } from '@mantine/core';
-import { IconLoader, IconUpload } from '@tabler/icons-react';
+import { IconLoader } from '@tabler/icons-react';
 import { useAddEmployee } from '../../../hooks/organisation/useAddEmployee';
-import PropTypes from 'prop-types';
 
 export default function AddEmployee() {
     const navigate = useNavigate();
@@ -101,10 +100,10 @@ export default function AddEmployee() {
                                 label="Department"
                                 placeholder="Select department"
                                 data={departmentListWithDefault}
-                                value={formValues.department}
-                                onChange={(value) => handleChange('department', value)}
+                                value={formValues.departmentId}
+                                onChange={(value) => handleChange('departmentId', value)}
                                 required
-                                error={errors.department}
+                                error={errors.departmentId}
                             />
                         </Grid.Col>
                         <Grid.Col span={6}>
@@ -112,10 +111,10 @@ export default function AddEmployee() {
                                 label="Designation"
                                 placeholder="Select designation"
                                 data={designationListWithDefault}
-                                value={formValues.designation}
-                                onChange={(value) => handleChange('designation', value)}
+                                value={formValues.designationId}
+                                onChange={(value) => handleChange('designationId', value)}
                                 required
-                                error={errors.designation}
+                                error={errors.designationId}
                             />
                         </Grid.Col>
                         <Grid.Col span={6}>
@@ -123,10 +122,10 @@ export default function AddEmployee() {
                                 label="Shift"
                                 placeholder="Select shift"
                                 data={shiftListWithDefault}
-                                value={formValues.shift}
-                                onChange={(value) => handleChange('shift', value)}
+                                value={formValues.shiftId}
+                                onChange={(value) => handleChange('shiftId', value)}
                                 required
-                                error={errors.shift}
+                                error={errors.shiftId}
                             />
                         </Grid.Col>
                         <Grid.Col span={6}>
