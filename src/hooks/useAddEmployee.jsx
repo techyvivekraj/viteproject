@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectLoading, selectDepartments, selectAddEmployeeStatus, selectAddEmployeeError, selectLastFetch } from '../store/slices/employeeSlice';
@@ -66,61 +66,77 @@ export const useAddEmployee = () => {
 
     const [managers, setManagers] = useState([]);
 
+    // Add new loading states
+    const [isLoadingDepartments, setIsLoadingDepartments] = useState(true);
+    const [isLoadingDesignations, setIsLoadingDesignations] = useState(true);
+    const [isLoadingShifts, setIsLoadingShifts] = useState(true);
+
     useEffect(() => {
         const loadInitialData = async () => {
             if (!organizationId) return;
 
-            const shouldFetch = !lastFetch || Date.now() - lastFetch > 300000;
-            if (shouldFetch) {
-                try {
-                    await Promise.all([
-                        dispatch(fetchDepartments(organizationId)),
-                        dispatch(fetchDesignations(organizationId)),
-                        dispatch(fetchShifts(organizationId))
-                    ]);
-                } catch (error) {
-                    showError('Failed to load initial data');
-                }
+            try {
+                setIsLoadingDepartments(true);
+                setIsLoadingDesignations(true);
+                setIsLoadingShifts(true);
+
+                await Promise.all([
+                    dispatch(fetchDepartments(organizationId)),
+                    dispatch(fetchDesignations(organizationId)),
+                    dispatch(fetchShifts(organizationId))
+                ]);
+            } catch (error) {
+                showError('Failed to load initial data');
+            } finally {
+                // Add a small delay before setting loading to false to ensure data is processed
+                setTimeout(() => {
+                    setIsLoadingDepartments(false);
+                    setIsLoadingDesignations(false);
+                    setIsLoadingShifts(false);
+                }, 500);
             }
         };
 
         loadInitialData();
-    }, [dispatch, lastFetch, organizationId]);
+    }, [dispatch, organizationId]);
 
     // Transform data for dropdowns
-    const departmentList = departments?.data?.map(dept => ({
-        value: String(dept.id),
-        label: dept.name
-    })) || [];
+    const departmentList = useMemo(() => {
+        const deptList = departments?.data?.map(dept => ({
+            value: String(dept.id),
+            label: dept.name
+        })) || [];
 
-    // Add default option to department list
-    const departmentListWithDefault = [
-        { value: 'default', label: 'Default Department' },
-        ...departmentList
-    ];
+        return [
+            { value: 'default', label: 'Select Department', disabled: true },
+            ...deptList
+        ];
+    }, [departments?.data]);
 
-    const designationList = designations?.data?.map(desig => ({
-        value: String(desig.id),
-        label: desig.name
-    })) || [];
+    const designationList = useMemo(() => {
+        const desigList = designations?.data?.map(desig => ({
+            value: String(desig.id),
+            label: desig.name
+        })) || [];
 
-    // Add default option to designation list
-    const designationListWithDefault = [
-        { value: 'default', label: 'Default Designation' },
-        ...designationList
-    ];
+        return [
+            { value: 'default', label: 'Select Designation', disabled: true },
+            ...desigList
+        ];
+    }, [designations?.data]);
 
-    const shiftList = shifts?.data?.map(shift => ({
-        value: String(shift.id),
-        label: shift.name
-    })) || [];
+    const shiftList = useMemo(() => {
+        const shiftsList = shifts?.data?.map(shift => ({
+            value: String(shift.id),
+            label: shift.name
+        })) || [];
 
-    // Add default option to shift list
-    const shiftListWithDefault = [
-        { value: 'default', label: 'Default Shift' },
-        ...shiftList
-    ];
-    
+        return [
+            { value: 'default', label: 'Select Shift', disabled: true },
+            ...shiftsList
+        ];
+    }, [shifts?.data]);
+
     const handleChange = useCallback((field, value) => {
         setFormValues(prev => {
             // Handle date fields
@@ -281,14 +297,29 @@ export const useAddEmployee = () => {
         }
     }, [addStatus, addError]);
 
+    // Update handleChange to set initial values
+    useEffect(() => {
+        if (!isLoadingDepartments && !isLoadingDesignations && !isLoadingShifts) {
+            setFormValues(prev => ({
+                ...prev,
+                department_id: prev.department_id || 'default',
+                designation_id: prev.designation_id || 'default',
+                shift_id: prev.shift_id || 'default'
+            }));
+        }
+    }, [isLoadingDepartments, isLoadingDesignations, isLoadingShifts]);
+
     return {
         formValues,
         errors,
         loading: loading || addStatus === 'loading',
         isLoadingCity,
-        departmentList: departmentListWithDefault,
-        designationList: designationListWithDefault,
-        shiftList: shiftListWithDefault,
+        isLoadingDepartments,
+        isLoadingDesignations,
+        isLoadingShifts,
+        departmentList,
+        designationList,
+        shiftList,
         managerList: managers,
         countries,
         indianStates,

@@ -19,9 +19,9 @@ import {
     Container
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { IconLoader, IconInfoCircle, IconUpload } from '@tabler/icons-react';
+import { IconLoader, IconInfoCircle, IconUpload, IconX, IconDeviceFloppy } from '@tabler/icons-react';
 import { useAddEmployee } from '../../hooks/useAddEmployee'
-import { useMediaQuery, useWindowScroll } from '@mantine/hooks';
+import { modals } from '@mantine/modals';
 
 export default function AddEmployee() {
     const navigate = useNavigate();
@@ -30,6 +30,9 @@ export default function AddEmployee() {
         errors,
         loading,
         isLoadingCity,
+        isLoadingDepartments,
+        isLoadingDesignations,
+        isLoadingShifts,
         departmentList,
         designationList,
         shiftList,
@@ -46,6 +49,19 @@ export default function AddEmployee() {
         await handleSubmit(e);
     };
 
+    const handleCancel = () => {
+        modals.openConfirmModal({
+            title: 'Confirm Cancel',
+            children: (
+                <Text size="sm">
+                    Are you sure you want to cancel? All unsaved changes will be lost.
+                </Text>
+            ),
+            labels: { confirm: 'Yes, Cancel', cancel: 'Continue Editing' },
+            confirmProps: { color: 'red' },
+            onConfirm: () => navigate(-1)
+        });
+    };
     return (
         <Container size="xl">
             <Paper p="xl" radius="md" shadow="sm">
@@ -55,24 +71,26 @@ export default function AddEmployee() {
                         <Text color="dimmed" size="sm">Fill in the employee details below</Text>
                     </div>
                     <Group>
-                        <Button 
-                            variant="default" 
-                            onClick={() => navigate(-1)}
-                            disabled={loading}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            form="employee-form"
-                            loading={loading}
-                            size="md"
-                            disabled={loading}
-                            color="blue"
-                        >
-                            {loading ? 'Saving...' : 'Save Employee'}
-                        </Button>
-                    </Group>
+                            <Button 
+                                variant="light" 
+                                color="red"
+                                onClick={handleCancel}
+                                disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+                                leftIcon={<IconX size={18} />}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                form="employee-form"
+                                loading={loading}
+                                disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+                                color="blue"
+                                leftIcon={<IconDeviceFloppy size={18} />}
+                            >
+                                {loading ? 'Saving...' : 'Save Employee'}
+                            </Button>
+                        </Group>
                 </Group>
                 
                 {errors.general && (
@@ -841,18 +859,21 @@ export default function AddEmployee() {
 
                         <Group position="apart" mt="xl">
                             <Button 
-                                variant="default" 
-                                onClick={() => navigate(-1)}
-                                disabled={loading}
+                                variant="light" 
+                                color="red"
+                                onClick={handleCancel}
+                                disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+                                leftIcon={<IconX size={18} />}
                             >
                                 Cancel
                             </Button>
-                            <Button 
+                            <Button
                                 type="submit"
+                                form="employee-form"
                                 loading={loading}
-                                size="md"
-                                disabled={loading}
+                                disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
                                 color="blue"
+                                leftIcon={<IconDeviceFloppy size={18} />}
                             >
                                 {loading ? 'Saving...' : 'Save Employee'}
                             </Button>
