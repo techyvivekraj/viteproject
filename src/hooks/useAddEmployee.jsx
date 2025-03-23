@@ -12,34 +12,34 @@ import { showError, showToast } from '../components/api';
 
 const initialFormState = {
     // Required fields
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     phone: '',
     email: '',
-    joiningDate: null,
-    departmentId: '',
-    designationId: '',
-    shiftId: '',
-    salaryType: '',
+    joining_date: null,
+    department_id: '',
+    designation_id: '',
+    shift_id: '',
+    salary_type: '',
     salary: '',
 
     // Optional fields
-    middleName: '',
-    employeeCode: '',
+    middle_name: '',
+    employee_code: '',
     address: '',
     country: '',
     state: '',
     city: '',
-    postalCode: '',
-    dateOfBirth: null,
+    postal_code: '',
+    date_of_birth: null,
     gender: '',
-    bloodGroup: '',
-    emergencyContact: '',
-    emergencyName: '',
-    reportingManagerId: '',
-    bankAccountNumber: '',
-    bankIfsc: '',
-    bankName: '',
+    blood_group: '',
+    emergency_contact: '',
+    emergency_name: '',
+    reporting_manager_id: '',
+    bank_account_number: '',
+    bank_ifsc: '',
+    bank_name: '',
 
     // Document fields
     educationalDocs: [],
@@ -67,13 +67,24 @@ export const useAddEmployee = () => {
     const [managers, setManagers] = useState([]);
 
     useEffect(() => {
-        if (organizationId && (!lastFetch || Date.now() - lastFetch > 300000)) {
-            dispatch(fetchDepartments(organizationId));
-            dispatch(fetchDesignations(organizationId));
-            dispatch(fetchShifts(organizationId));
-            setManagers([]);
-            console.log(organizationId);
-        }
+        const loadInitialData = async () => {
+            if (!organizationId) return;
+
+            const shouldFetch = !lastFetch || Date.now() - lastFetch > 300000;
+            if (shouldFetch) {
+                try {
+                    await Promise.all([
+                        dispatch(fetchDepartments(organizationId)),
+                        dispatch(fetchDesignations(organizationId)),
+                        dispatch(fetchShifts(organizationId))
+                    ]);
+                } catch (error) {
+                    showError('Failed to load initial data');
+                }
+            }
+        };
+
+        loadInitialData();
     }, [dispatch, lastFetch, organizationId]);
 
     // Transform data for dropdowns
@@ -111,11 +122,23 @@ export const useAddEmployee = () => {
     ];
     
     const handleChange = useCallback((field, value) => {
-        setFormValues(prev => ({ ...prev, [field]: value }));
+        setFormValues(prev => {
+            // Handle date fields
+            if (field === 'joining_date' || field === 'date_of_birth') {
+                // Ensure we're working with the local timezone
+                if (value) {
+                    const date = new Date(value);
+                    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+                    return { ...prev, [field]: date };
+                }
+                return { ...prev, [field]: null };
+            }
+            return { ...prev, [field]: value };
+        });
         setErrors(prev => ({ ...prev, [field]: '' }));
 
         // Auto-fetch city when postal code changes
-        if (field === 'postalCode' && value?.length === 6) {
+        if (field === 'postal_code' && value?.length === 6) {
             // Inline the fetch logic
             setIsLoadingCity(true);
             fetch(`https://api.postalpincode.in/pincode/${value}`)
@@ -133,12 +156,12 @@ export const useAddEmployee = () => {
                             country: 'IN'
                         }));
                     } else {
-                        setErrors(prev => ({ ...prev, postalCode: 'Invalid pincode' }));
+                        setErrors(prev => ({ ...prev, postal_code: 'Invalid pincode' }));
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching city:', error);
-                    setErrors(prev => ({ ...prev, postalCode: 'Failed to fetch city details' }));
+                    setErrors(prev => ({ ...prev, postal_code: 'Failed to fetch city details' }));
                 })
                 .finally(() => {
                     setIsLoadingCity(false);
@@ -155,25 +178,25 @@ export const useAddEmployee = () => {
         const newErrors = {};
 
         // Required field validations
-        if (!formValues.firstName?.trim()) newErrors.firstName = 'First name is required';
-        if (!formValues.lastName?.trim()) newErrors.lastName = 'Last name is required';
+        if (!formValues.first_name?.trim()) newErrors.first_name = 'First name is required';
+        if (!formValues.last_name?.trim()) newErrors.last_name = 'Last name is required';
         if (!formValues.phone?.trim()) newErrors.phone = 'Phone number is required';
         if (!formValues.email?.trim()) {
             newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
             newErrors.email = 'Invalid email format';
         }
-        if (!formValues.joiningDate) newErrors.joiningDate = 'Joining date is required';
-        if (!formValues.departmentId || formValues.departmentId === 'default') {
-            newErrors.departmentId = 'Department is required';
+        if (!formValues.joining_date) newErrors.joining_date = 'Joining date is required';
+        if (!formValues.department_id || formValues.department_id === 'default') {
+            newErrors.department_id = 'Department is required';
         }
-        if (!formValues.designationId || formValues.designationId === 'default') {
-            newErrors.designationId = 'Designation is required';
+        if (!formValues.designation_id || formValues.designation_id === 'default') {
+            newErrors.designation_id = 'Designation is required';
         }
-        if (!formValues.shiftId || formValues.shiftId === 'default') {
-            newErrors.shiftId = 'Shift is required';
+        if (!formValues.shift_id || formValues.shift_id === 'default') {
+            newErrors.shift_id = 'Shift is required';
         }
-        if (!formValues.salaryType) newErrors.salaryType = 'Salary type is required';
+        if (!formValues.salary_type) newErrors.salary_type = 'Salary type is required';
         if (!formValues.salary && formValues.salary !== 0) {
             newErrors.salary = 'Salary amount is required';
         }
@@ -184,8 +207,8 @@ export const useAddEmployee = () => {
         }
 
         // Emergency contact validation (only if provided)
-        if (formValues.emergencyContact && !/^\d{10}$/.test(formValues.emergencyContact)) {
-            newErrors.emergencyContact = 'Emergency contact must be 10 digits';
+        if (formValues.emergency_contact && !/^\d{10}$/.test(formValues.emergency_contact)) {
+            newErrors.emergency_contact = 'Emergency contact must be 10 digits';
         }
 
         return newErrors;
@@ -210,7 +233,7 @@ export const useAddEmployee = () => {
             Object.keys(formValues).forEach(key => {
                 if (key.endsWith('Docs')) {
                     // Handle file uploads
-                    if (formValues[key] && formValues[key].length > 0) {
+                    if (formValues[key]?.length > 0) {
                         formValues[key].forEach(file => {
                             formData.append(key, file);
                         });
@@ -218,9 +241,10 @@ export const useAddEmployee = () => {
                 } else if (formValues[key] !== null && formValues[key] !== '') {
                     // Handle date objects
                     if (formValues[key] instanceof Date) {
-                        formData.append(key, formValues[key].toISOString());
+                        // Format date in ISO string but keep local timezone
+                        const date = new Date(formValues[key]);
+                        formData.append(key, date.toISOString());
                     } else if (key === 'salary') {
-                        // Ensure salary amount is sent as a number
                         formData.append(key, Number(formValues[key]));
                     } else {
                         formData.append(key, formValues[key]);
@@ -229,7 +253,7 @@ export const useAddEmployee = () => {
             });
 
             // Add organization ID
-            formData.append('organizationId', organizationId);
+            formData.append('organization_id', organizationId);
 
             // Dispatch addEmployee action
             await dispatch(addEmployee(formData)).unwrap();

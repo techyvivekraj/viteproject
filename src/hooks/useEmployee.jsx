@@ -18,11 +18,15 @@ export const useEmployee = () => {
     const loading = useSelector(selectLoading);
     const lastFetch = useSelector(selectLastFetch);
 
+    // Fetch employees only if needed (5 minutes cache)
     useEffect(() => {
-        if (organizationId && (!lastFetch || Date.now() - lastFetch > 300000)) {
+        const shouldFetch = !lastFetch || Date.now() - lastFetch > 300000;
+        const hasNoData = !employees?.data;
+        
+        if (organizationId && (shouldFetch || hasNoData)) {
             dispatch(fetchEmployees(organizationId));
         }
-    }, [dispatch, lastFetch, organizationId]);
+    }, [dispatch, lastFetch, organizationId, employees?.data]);
 
     const handleDelete = useCallback(async (employeeId) => {
         try {
@@ -30,15 +34,16 @@ export const useEmployee = () => {
                 throw new Error('Organization ID is required');
             }
 
+            // Show confirmation before making API call
+            const confirmed = window.confirm('Are you sure you want to delete this employee?');
+            if (!confirmed) return;
+
             await dispatch(deleteEmployee({ 
                 id: employeeId, 
                 organizationId 
             })).unwrap();
             
             showToast('Employee deleted successfully', 'success');
-            
-            // Refresh the employee list
-            dispatch(fetchEmployees(organizationId));
         } catch (error) {
             showError(error.message || 'Failed to delete employee');
         }
