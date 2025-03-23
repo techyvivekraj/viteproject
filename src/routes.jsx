@@ -6,6 +6,7 @@ import ProtectedRoute from './components/privateRoiute';
 // import Employees from './pages/employees/employees';
 import AddEmployee from './pages/employees/add_employee';
 import Organisation from './pages/organisation/organisation';
+import NotFound from './pages/NotFound';
 // import Expense from '../features/expense/expense';
 // import Payroll from '../features/payroll/payroll';
 // import Ticket from '../features/ticket/ticket';
@@ -27,6 +28,8 @@ const Navigator = () => {
           {/* <Route path="employees" element={<Employees />} /> */}
           <Route path="employees/add" element={<AddEmployee />} />
           <Route path="organisation" element={<Organisation />} />
+          {/* Catch all route for 404 */}
+          <Route path="*" element={<NotFound />} />
            {/*<Route path="attendance" element={<Attendance />} />
           <Route path="overtime" element={<Overtime />} />
           <Route path="advance" element={<Advance />} />

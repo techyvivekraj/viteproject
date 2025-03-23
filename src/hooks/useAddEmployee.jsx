@@ -1,12 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectLoading, selectDepartments } from '../store/slices/employeeSlice';
+import { useNavigate } from 'react-router-dom';
+import { selectLoading, selectDepartments, selectAddEmployeeStatus, selectAddEmployeeError, selectLastFetch } from '../store/slices/employeeSlice';
 import { addEmployee, fetchDepartments } from '../store/actions/employee';
 import { fetchDesignations } from '../store/actions/organisation/designation';
 import { fetchShifts } from '../store/actions/organisation/shift';
 import { selectDesignations } from '../store/slices/organisation/designationSlice';
 import { selectShifts } from '../store/slices/organisation/shiftSlice';
 import { countries, indianStates } from '../utils/locationData';
+import { showError, showToast } from '../components/api';
 
 const initialFormState = {
     // Required fields
@@ -19,7 +21,7 @@ const initialFormState = {
     designationId: '',
     shiftId: '',
     salaryType: '',
-    salaryAmount: '',
+    salary: '',
 
     // Optional fields
     middleName: '',
@@ -52,24 +54,26 @@ export const useAddEmployee = () => {
     const [errors, setErrors] = useState({});
     const [isLoadingCity, setIsLoadingCity] = useState(false);
     const loading = useSelector(selectLoading);
+    const addStatus = useSelector(selectAddEmployeeStatus);
+    const addError = useSelector(selectAddEmployeeError);
     const departments = useSelector(selectDepartments);
     const designations = useSelector(selectDesignations);
     const shifts = useSelector(selectShifts);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const organizationId = localStorage.getItem('orgId');
+    const lastFetch = useSelector(selectLastFetch);
 
     const [managers, setManagers] = useState([]);
 
     useEffect(() => {
-        if (organizationId) {
-
+        if (organizationId && (!lastFetch || Date.now() - lastFetch > 300000)) {
             dispatch(fetchDepartments(organizationId));
             dispatch(fetchDesignations(organizationId));
             dispatch(fetchShifts(organizationId));
             setManagers([]);
         }
-    }, [dispatch, organizationId]);
-
+    }, [dispatch, lastFetch, organizationId]);
 
     // Transform data for dropdowns
     const departmentList = departments?.data?.map(dept => ({
@@ -104,84 +108,87 @@ export const useAddEmployee = () => {
         { value: 'default', label: 'Default Shift' },
         ...shiftList
     ];
-
-    const validate = useCallback(() => {
-        const newErrors = {};
-
-        // Required field validations
-        if (!formValues.firstName) newErrors.firstName = 'First name is required';
-        if (!formValues.lastName) newErrors.lastName = 'Last name is required';
-        if (!formValues.phone) newErrors.phone = 'Phone number is required';
-        if (!formValues.email) {
-            newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
-            newErrors.email = 'Invalid email format';
-        }
-        if (!formValues.joiningDate) newErrors.joiningDate = 'Joining date is required';
-        if (!formValues.departmentId) newErrors.departmentId = 'Department is required';
-        if (!formValues.designationId) newErrors.designationId = 'Designation is required';
-        if (!formValues.shiftId) newErrors.shiftId = 'Shift is required';
-        if (!formValues.salaryType) newErrors.salaryType = 'Salary type is required';
-        if (!formValues.salaryAmount) newErrors.salaryAmount = 'Salary amount is required';
-
-        // Phone number validation
-        if (formValues.phone && !/^\d{10}$/.test(formValues.phone)) {
-            newErrors.phone = 'Phone number must be 10 digits';
-        }
-
-        // Emergency contact validation
-        if (formValues.emergencyContact && !/^\d{10}$/.test(formValues.emergencyContact)) {
-            newErrors.emergencyContact = 'Emergency contact must be 10 digits';
-        }
-
-        return newErrors;
-    }, [formValues]);
-
-    const fetchCityFromPincode = useCallback(async (pincode) => {
-        if (!pincode || pincode.length !== 6) return;
-        
-        setIsLoadingCity(true);
-        try {
-            const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-            const data = await response.json();
-            
-            if (data[0]?.Status === 'Success') {
-                const postOffice = data[0].PostOffice[0];
-                // Update city
-                handleChange('city', postOffice.District);
-                // Find matching state from indianStates
-                const matchingState = indianStates.find(
-                    state => state.label.toLowerCase() === postOffice.State.toLowerCase()
-                );
-                // Update state with the matching state value
-                handleChange('state', matchingState?.value || '');
-                // Set country to India
-                handleChange('country', 'IN');
-            } else {
-                setErrors(prev => ({ ...prev, postalCode: 'Invalid pincode' }));
-            }
-        } catch (error) {
-            console.error('Error fetching city:', error);
-            setErrors(prev => ({ ...prev, postalCode: 'Failed to fetch city details' }));
-        } finally {
-            setIsLoadingCity(false);
-        }
-    }, [indianStates]);
-
+    
     const handleChange = useCallback((field, value) => {
         setFormValues(prev => ({ ...prev, [field]: value }));
         setErrors(prev => ({ ...prev, [field]: '' }));
 
         // Auto-fetch city when postal code changes
-        if (field === 'postalCode') {
-            fetchCityFromPincode(value);
+        if (field === 'postalCode' && value?.length === 6) {
+            // Inline the fetch logic
+            setIsLoadingCity(true);
+            fetch(`https://api.postalpincode.in/pincode/${value}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data[0]?.Status === 'Success') {
+                        const postOffice = data[0].PostOffice[0];
+                        // Update form values directly
+                        setFormValues(prev => ({
+                            ...prev,
+                            city: postOffice.District,
+                            state: indianStates.find(
+                                state => state.label.toLowerCase() === postOffice.State.toLowerCase()
+                            )?.value || '',
+                            country: 'IN'
+                        }));
+                    } else {
+                        setErrors(prev => ({ ...prev, postalCode: 'Invalid pincode' }));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching city:', error);
+                    setErrors(prev => ({ ...prev, postalCode: 'Failed to fetch city details' }));
+                })
+                .finally(() => {
+                    setIsLoadingCity(false);
+                });
         }
 
         // Reset state when country changes
         if (field === 'country') {
             setFormValues(prev => ({ ...prev, state: '' }));
         }
-    }, [fetchCityFromPincode]);
+    }, []);
+
+    const validate = useCallback(() => {
+        const newErrors = {};
+
+        // Required field validations
+        if (!formValues.firstName?.trim()) newErrors.firstName = 'First name is required';
+        if (!formValues.lastName?.trim()) newErrors.lastName = 'Last name is required';
+        if (!formValues.phone?.trim()) newErrors.phone = 'Phone number is required';
+        if (!formValues.email?.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
+            newErrors.email = 'Invalid email format';
+        }
+        if (!formValues.joiningDate) newErrors.joiningDate = 'Joining date is required';
+        if (!formValues.departmentId || formValues.departmentId === 'default') {
+            newErrors.departmentId = 'Department is required';
+        }
+        if (!formValues.designationId || formValues.designationId === 'default') {
+            newErrors.designationId = 'Designation is required';
+        }
+        if (!formValues.shiftId || formValues.shiftId === 'default') {
+            newErrors.shiftId = 'Shift is required';
+        }
+        if (!formValues.salaryType) newErrors.salaryType = 'Salary type is required';
+        if (!formValues.salary && formValues.salary !== 0) {
+            newErrors.salary = 'Salary amount is required';
+        }
+
+        // Phone number validation (only if provided)
+        if (formValues.phone && !/^\d{10}$/.test(formValues.phone)) {
+            newErrors.phone = 'Phone number must be 10 digits';
+        }
+
+        // Emergency contact validation (only if provided)
+        if (formValues.emergencyContact && !/^\d{10}$/.test(formValues.emergencyContact)) {
+            newErrors.emergencyContact = 'Emergency contact must be 10 digits';
+        }
+
+        return newErrors;
+    }, [formValues]);
 
     const handleFileChange = useCallback((field, files) => {
         setFormValues(prev => ({ ...prev, [field]: files }));
@@ -202,30 +209,57 @@ export const useAddEmployee = () => {
             Object.keys(formValues).forEach(key => {
                 if (key.endsWith('Docs')) {
                     // Handle file uploads
-                    formValues[key].forEach(file => {
-                        formData.append(key, file);
-                    });
+                    if (formValues[key] && formValues[key].length > 0) {
+                        formValues[key].forEach(file => {
+                            formData.append(key, file);
+                        });
+                    }
                 } else if (formValues[key] !== null && formValues[key] !== '') {
-                    formData.append(key, formValues[key]);
+                    // Handle date objects
+                    if (formValues[key] instanceof Date) {
+                        formData.append(key, formValues[key].toISOString());
+                    } else if (key === 'salary') {
+                        // Ensure salary amount is sent as a number
+                        formData.append(key, Number(formValues[key]));
+                    } else {
+                        formData.append(key, formValues[key]);
+                    }
                 }
             });
 
             // Add organization ID
             formData.append('organizationId', organizationId);
 
+            // Dispatch addEmployee action
             await dispatch(addEmployee(formData)).unwrap();
-            setFormValues(initialFormState);
-            // You might want to navigate to the employees list page here
+            
+            // Show success message and navigate
+            showToast('Employee added successfully', 'success');
+            navigate('/employees');
         } catch (error) {
-            console.error(error);
-            setErrors({ general: 'Failed to add employee. Please try again.' });
+            console.error('Error adding employee:', error);
+            showError(error.errors?.[0]?.msg || 'Failed to add employee', 'error');
+            setErrors(prev => ({
+                ...prev,
+                general: error.errors?.[0]?.msg || 'Failed to add employee. Please try again.'
+            }));
         }
-    }, [formValues, validate, organizationId, dispatch]);
+    }, [formValues, validate, organizationId, dispatch, navigate]);
+
+    // Effect to handle API response status
+    useEffect(() => {
+        if (addStatus === 'failed' && addError) {
+            setErrors(prev => ({
+                ...prev,
+                general: addError.errors?.[0]?.msg || 'Failed to add employee'
+            }));
+        }
+    }, [addStatus, addError]);
 
     return {
         formValues,
         errors,
-        loading,
+        loading: loading || addStatus === 'loading',
         isLoadingCity,
         departmentList: departmentListWithDefault,
         designationList: designationListWithDefault,

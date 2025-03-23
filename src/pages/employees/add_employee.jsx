@@ -18,8 +18,9 @@ import {
     ActionIcon
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { IconLoader, IconInfoCircle, IconUpload, } from '@tabler/icons-react';
+import { IconLoader, IconInfoCircle, IconUpload, IconCheck, IconX } from '@tabler/icons-react';
 import { useAddEmployee } from '../../hooks/useAddEmployee'
+import { showToast } from '../../components/api';
 
 export default function AddEmployee() {
     const navigate = useNavigate();
@@ -39,6 +40,11 @@ export default function AddEmployee() {
         handleSubmit
     } = useAddEmployee();
 
+    // Handle form submission
+    const onSubmit = async (e) => {
+        await handleSubmit(e);
+    };
+
     return (
         <Paper p="xl" radius="md" shadow="sm">
             <Group position="apart" mb="xl">
@@ -57,7 +63,7 @@ export default function AddEmployee() {
                 </Card>
             )}
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={onSubmit}>
                 <Stack spacing="xl">
                     {/* Required Fields Section */}
                     <Card withBorder p="md" radius="md">
@@ -168,10 +174,10 @@ export default function AddEmployee() {
                                 <NumberInput
                                     label="Salary Amount"
                                     placeholder="Enter salary amount"
-                                    value={formValues.salaryAmount}
-                                    onChange={(value) => handleChange('salaryAmount', value)}
+                                    value={formValues.salary}
+                                    onChange={(value) => handleChange('salary', value)}
                                     required
-                                    error={errors.salaryAmount}
+                                    error={errors.salary}
                                 />
                             </Grid.Col>
                         </Grid>
@@ -197,7 +203,6 @@ export default function AddEmployee() {
                                     data={countries}
                                     value={formValues.country}
                                     onChange={(value) => handleChange('country', value)}
-                                    required
                                     error={errors.country}
                                     rightSection={
                                         <Tooltip label="Select the country of residence">
@@ -216,7 +221,6 @@ export default function AddEmployee() {
                                         data={indianStates}
                                         value={formValues.state}
                                         onChange={(value) => handleChange('state', value)}
-                                        required
                                         error={errors.state}
                                         rightSection={
                                             <Tooltip label="State will be auto-filled based on postal code">
@@ -232,7 +236,6 @@ export default function AddEmployee() {
                                         placeholder="Enter state"
                                         value={formValues.state}
                                         onChange={(e) => handleChange('state', e.currentTarget.value)}
-                                        required
                                         error={errors.state}
                                     />
                                 )}
@@ -243,7 +246,6 @@ export default function AddEmployee() {
                                     placeholder="Enter postal code"
                                     value={formValues.postalCode}
                                     onChange={(e) => handleChange('postalCode', e.currentTarget.value)}
-                                    required
                                     error={errors.postalCode}
                                     rightSection={
                                         isLoadingCity ? 
@@ -262,7 +264,6 @@ export default function AddEmployee() {
                                     placeholder="Enter city"
                                     value={formValues.city}
                                     onChange={(e) => handleChange('city', e.currentTarget.value)}
-                                    required
                                     error={errors.city}
                                     rightSection={
                                         <Tooltip label="City will be auto-filled based on postal code">
@@ -364,7 +365,6 @@ export default function AddEmployee() {
                                     placeholder="Upload educational documents"
                                     multiple
                                     accept=".pdf,.doc,.docx"
-                                    maxFiles={5}
                                     onChange={(files) => handleFileChange('educationalDocs', files)}
                                     icon={<IconUpload size={14} />}
                                     rightSection={
@@ -382,7 +382,7 @@ export default function AddEmployee() {
                                     placeholder="Upload professional documents"
                                     multiple
                                     accept=".pdf,.doc,.docx"
-                                    maxFiles={5}
+                                    // maxFiles={5}
                                     onChange={(files) => handleFileChange('professionalDocs', files)}
                                     icon={<IconUpload size={14} />}
                                     rightSection={
@@ -400,7 +400,7 @@ export default function AddEmployee() {
                                     placeholder="Upload identity documents"
                                     multiple
                                     accept=".pdf,.doc,.docx"
-                                    maxFiles={5}
+                                    // maxFiles={5}
                                     onChange={(files) => handleFileChange('identityDocs', files)}
                                     icon={<IconUpload size={14} />}
                                     rightSection={
@@ -418,7 +418,7 @@ export default function AddEmployee() {
                                     placeholder="Upload address documents"
                                     multiple
                                     accept=".pdf,.doc,.docx"
-                                    maxFiles={5}
+                                    // maxFiles={5}
                                     onChange={(files) => handleFileChange('addressDocs', files)}
                                     icon={<IconUpload size={14} />}
                                     rightSection={
@@ -457,8 +457,9 @@ export default function AddEmployee() {
                             loading={loading}
                             size="lg"
                             leftIcon={<IconUpload size={20} />}
+                            disabled={loading}
                         >
-                            Save Employee
+                            {loading ? 'Saving...' : 'Save Employee'}
                         </Button>
                     </Group>
                 </Stack>

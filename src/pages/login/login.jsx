@@ -6,12 +6,10 @@ import {
   Paper,
   Group,
   Button,
-  Divider,
   Checkbox,
   Anchor,
   Stack,
   Container,
-  Box,
 } from '@mantine/core';
 import { MantineLogo } from '@mantinex/mantine-logo';
 import { useCallback, useEffect, useMemo, useRef, } from 'react';
@@ -31,7 +29,6 @@ export default function Login(props) {
   const user = useSelector(selectUser);
   const isRegistered = useSelector(selectIsRegistered);
   const isLoading = useSelector(selectIsLoading);
-  const error = useSelector(selectError);
 
   const form = useForm({
     initialValues: {
@@ -39,7 +36,7 @@ export default function Login(props) {
       email: '',
       mobile: '',
       password: '',
-      terms: true,
+      terms: false,
       confirmPassword: '',
       organizationName: '',
       recaptcha: '',
@@ -51,8 +48,7 @@ export default function Login(props) {
         type === 'register' && !/^\d{10}$/.test(value) ? 'Mobile number must be exactly 10 digits' : null,
       confirmPassword: (value, values) =>
         type === 'register' && value !== values.password ? 'Passwords do not match' : null,
-      terms: (value, values) =>
-        type === 'register' && !value ? 'You must agree to the terms and conditions' : null,
+      terms: (value) => (!value ? 'You must agree to the terms and conditions' : null),
       recaptcha: (value) => (!value && type === 'login' ? 'Please verify that you are not a robot' : null),
     },
   });
@@ -163,18 +159,24 @@ export default function Login(props) {
         </>
       )}
       {type === 'login' && (
-        <div>
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey="6LeZA_EqAAAAAMpgZdPH2_B0hxGSh6aMJM8d-PXI"
-            onChange={handleRecaptchaChange}
+        <>
+          <Checkbox
+            label="I accept terms and conditions"
+            {...form.getInputProps('terms', { type: 'checkbox' })}
           />
-          {form.errors.recaptcha && (
-            <div style={{ color: 'red', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-              {form.errors.recaptcha}
-            </div>
-          )}
-        </div>
+          <div>
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey="6LeZA_EqAAAAAMpgZdPH2_B0hxGSh6aMJM8d-PXI"
+              onChange={handleRecaptchaChange}
+            />
+            {form.errors.recaptcha && (
+              <div style={{ color: 'red', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                {form.errors.recaptcha}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </Stack>
   ), [type, form]);
