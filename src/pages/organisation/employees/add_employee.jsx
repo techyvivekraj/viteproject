@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     TextInput,
     Button,
     Grid,
     Select,
+    DateInput,
     Textarea,
     NumberInput,
     FileInput,
@@ -12,9 +14,9 @@ import {
     Title,
     Group
 } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
-import { IconLoader } from '@tabler/icons-react';
-import { useAddEmployee } from '../../hooks/useAddEmployee'
+import { IconLoader, IconUpload } from '@tabler/icons-react';
+import { useAddEmployee } from '../../../hooks/organisation/useAddEmployee';
+import PropTypes from 'prop-types';
 
 export default function AddEmployee() {
     const navigate = useNavigate();
@@ -22,10 +24,10 @@ export default function AddEmployee() {
         formValues,
         errors,
         loading,
-        departmentList,
-        designationList,
-        shiftList,
-        managerList,
+        departmentListWithDefault,
+        designationListWithDefault,
+        shiftListWithDefault,
+        salaryTypeListWithDefault,
         handleChange,
         handleFileChange,
         handleSubmit
@@ -98,20 +100,20 @@ export default function AddEmployee() {
                             <Select
                                 label="Department"
                                 placeholder="Select department"
-                                data={departmentList.length > 0 ? departmentList : [{ value: '', label: 'Loading departments...' }]}
-                                value={formValues.departmentId}
+                                data={departmentListWithDefault}
+                                value={formValues.department}
                                 onChange={(value) => handleChange('department', value)}
                                 required
                                 error={errors.department}
                             />
                         </Grid.Col>
                         <Grid.Col span={6}>
-                            <TextInput
+                            <Select
                                 label="Designation"
-                                placeholder="Enter designation"
-                                data={designationList.length > 0 ? designationList : [{ value: '', label: 'Loading designation...' }]}
-                                value={formValues.designationId}
-                                onChange={(e) => handleChange('designation', e.currentTarget.value)}
+                                placeholder="Select designation"
+                                data={designationListWithDefault}
+                                value={formValues.designation}
+                                onChange={(value) => handleChange('designation', value)}
                                 required
                                 error={errors.designation}
                             />
@@ -120,8 +122,8 @@ export default function AddEmployee() {
                             <Select
                                 label="Shift"
                                 placeholder="Select shift"
-                                data={shiftList.length > 0 ? shiftList : [{ value: '', label: 'Loading shifts...' }]}
-                                value={formValues.shiftId}
+                                data={shiftListWithDefault}
+                                value={formValues.shift}
                                 onChange={(value) => handleChange('shift', value)}
                                 required
                                 error={errors.shift}
@@ -131,11 +133,7 @@ export default function AddEmployee() {
                             <Select
                                 label="Salary Type"
                                 placeholder="Select salary type"
-                                data={[
-                                    { value: 'monthly', label: 'Monthly' },
-                                    { value: 'hourly', label: 'Hourly' },
-                                    { value: 'daily', label: 'Daily' }
-                                ]}
+                                data={salaryTypeListWithDefault}
                                 value={formValues.salaryType}
                                 onChange={(value) => handleChange('salaryType', value)}
                                 required
@@ -254,7 +252,6 @@ export default function AddEmployee() {
                             <TextInput
                                 label="Reporting Manager"
                                 placeholder="Enter reporting manager"
-                                data={managerList.length > 0 ? managerList : [{ value: '', label: 'Loading managers...' }]}
                                 value={formValues.reportingManager}
                                 onChange={(e) => handleChange('reportingManager', e.currentTarget.value)}
                             />

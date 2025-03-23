@@ -1,11 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectLoading, selectDepartments } from '../store/slices/employeeSlice';
-import { addEmployee, fetchDepartments } from '../store/actions/employee';
-import { fetchDesignations } from '../store/actions/organisation/designation';
-import { fetchShifts } from '../store/actions/organisation/shift';
-import { selectDesignations } from '../store/slices/organisation/designationSlice';
-import { selectShifts } from '../store/slices/organisation/shiftSlice';
+import { selectLoading, selectDepartments } from '../../store/slices/organisation/employeeSlice';
+import { addEmployee, fetchDepartments } from '../../store/actions/organisation/employee';
 
 const initialFormState = {
     // Required fields
@@ -14,9 +10,9 @@ const initialFormState = {
     phone: '',
     email: '',
     joiningDate: null,
-    departmentId: '',
-    designationId: '',
-    shiftId: '',
+    department: '',
+    designation: '',
+    shift: '',
     salaryType: '',
     salaryAmount: '',
 
@@ -49,58 +45,49 @@ export const useAddEmployee = () => {
     const [formValues, setFormValues] = useState(initialFormState);
     const [errors, setErrors] = useState({});
     const loading = useSelector(selectLoading);
-    const departments = useSelector(selectDepartments);
-    const designations = useSelector(selectDesignations);
-    const shifts = useSelector(selectShifts);
+    const departmentsData = useSelector(selectDepartments);
     const dispatch = useDispatch();
     const organizationId = localStorage.getItem('orgId');
+
+    // Transform data for dropdowns
+    const departmentList = departmentsData?.data?.map(dept => ({
+        value: String(dept.id),
+        label: dept.name
+    })) || [];
     
-  const [managers, setManagers] = useState([]);
+    // Add default option to department list
+    const departmentListWithDefault = [
+        { value: 'default', label: 'Select Department' },
+        ...departmentList
+    ];
+
+    // Predefined lists for other dropdowns
+    const designationListWithDefault = [
+        { value: 'default', label: 'Select Designation' },
+        { value: 'manager', label: 'Manager' },
+        { value: 'supervisor', label: 'Supervisor' },
+        { value: 'employee', label: 'Employee' }
+    ];
+
+    const shiftListWithDefault = [
+        { value: 'default', label: 'Select Shift' },
+        { value: 'morning', label: 'Morning Shift' },
+        { value: 'afternoon', label: 'Afternoon Shift' },
+        { value: 'night', label: 'Night Shift' }
+    ];
+
+    const salaryTypeListWithDefault = [
+        { value: 'default', label: 'Select Salary Type' },
+        { value: 'monthly', label: 'Monthly' },
+        { value: 'hourly', label: 'Hourly' },
+        { value: 'daily', label: 'Daily' }
+    ];
 
     useEffect(() => {
         if (organizationId) {
-            
-    dispatch(fetchDepartments(organizationId));
-    dispatch(fetchDesignations(organizationId));
-    dispatch(fetchShifts(organizationId));
-    setManagers([]);
+            dispatch(fetchDepartments(organizationId));
         }
     }, [dispatch, organizationId]);
-
-    
-  // Transform data for dropdowns
-  const departmentList = departments?.data?.map(dept => ({
-    value: String(dept.id),
-    label: dept.name
-  })) || [];
-  
-  // Add default option to department list
-  const departmentListWithDefault = [
-    { value: 'default', label: 'Default Department' },
-    ...departmentList
-  ];
-
-  const designationList = designations?.data?.map(desig => ({
-    value: String(desig.id),
-    label: desig.name
-  })) || [];
-  
-  // Add default option to designation list
-  const designationListWithDefault = [
-    { value: 'default', label: 'Default Designation' },
-    ...designationList
-  ];
-
-  const shiftList = shifts?.data?.map(shift => ({
-    value: String(shift.id),
-    label: shift.name
-  })) || [];
-  
-  // Add default option to shift list
-  const shiftListWithDefault = [
-    { value: 'default', label: 'Default Shift' },
-    ...shiftList
-  ];
 
     const validate = useCallback(() => {
         const newErrors = {};
@@ -115,10 +102,10 @@ export const useAddEmployee = () => {
             newErrors.email = 'Invalid email format';
         }
         if (!formValues.joiningDate) newErrors.joiningDate = 'Joining date is required';
-        if (!formValues.department) newErrors.department = 'Department is required';
-        if (!formValues.designation) newErrors.designation = 'Designation is required';
-        if (!formValues.shift) newErrors.shift = 'Shift is required';
-        if (!formValues.salaryType) newErrors.salaryType = 'Salary type is required';
+        if (!formValues.department || formValues.department === 'default') newErrors.department = 'Department is required';
+        if (!formValues.designation || formValues.designation === 'default') newErrors.designation = 'Designation is required';
+        if (!formValues.shift || formValues.shift === 'default') newErrors.shift = 'Shift is required';
+        if (!formValues.salaryType || formValues.salaryType === 'default') newErrors.salaryType = 'Salary type is required';
         if (!formValues.salaryAmount) newErrors.salaryAmount = 'Salary amount is required';
 
         // Phone number validation
@@ -182,10 +169,10 @@ export const useAddEmployee = () => {
         formValues,
         errors,
         loading,
-        departmentList: departmentListWithDefault,
-        designationList: designationListWithDefault,
-        shiftList: shiftListWithDefault,
-        managerList: managers,
+        departmentListWithDefault,
+        designationListWithDefault,
+        shiftListWithDefault,
+        salaryTypeListWithDefault,
         handleChange,
         handleFileChange,
         handleSubmit

@@ -5,7 +5,7 @@ import deptSlice from './slices/organisation/deptSlice';
 import assetsSlice from './slices/organisation/assetsSlice';
 // import shiftSlice from './slices/shiftSlice';
 // import themeSlice from './slices/themeSlice';
-import employeesSlice from './slices/employeesSlice';
+import employeesSlice from './slices/employeeSlice';
 import holidaySlice from './slices/organisation/holidaySlice';
 import shiftSlice from './slices/organisation/shiftSlice';
 import designationSlice from './slices/organisation/designationSlice';
