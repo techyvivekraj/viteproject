@@ -67,7 +67,8 @@ const employeeSlice = createSlice({
             .addCase(addEmployee.fulfilled, (state, action) => {
                 state.addEmployeeStatus = 'succeeded';
                 if (state.employees?.data) {
-                    state.employees.data.push(action.payload.data);
+                    // The data structure is already correct, just add it to the array
+                    state.employees.data.unshift(action.payload.data);
                 }
             })
             .addCase(addEmployee.rejected, (state, action) => {

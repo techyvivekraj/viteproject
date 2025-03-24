@@ -34,10 +34,6 @@ export const useEmployee = () => {
                 throw new Error('Organization ID is required');
             }
 
-            // Show confirmation before making API call
-            const confirmed = window.confirm('Are you sure you want to delete this employee?');
-            if (!confirmed) return;
-
             await dispatch(deleteEmployee({ 
                 id: employeeId, 
                 organizationId 

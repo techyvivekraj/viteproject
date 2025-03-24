@@ -115,10 +115,10 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="First Name"
                                         placeholder="Enter first name"
-                                        value={formValues.first_name}
-                                        onChange={(e) => handleChange('first_name', e.currentTarget.value)}
+                                        value={formValues.firstName}
+                                        onChange={(e) => handleChange('firstName', e.currentTarget.value)}
                                         required
-                                        error={errors.first_name}
+                                        error={errors.firstName}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -137,10 +137,10 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="Last Name"
                                         placeholder="Enter last name"
-                                        value={formValues.last_name}
-                                        onChange={(e) => handleChange('last_name', e.currentTarget.value)}
+                                        value={formValues.lastName}
+                                        onChange={(e) => handleChange('lastName', e.currentTarget.value)}
                                         required
-                                        error={errors.last_name}
+                                        error={errors.lastName}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -203,14 +203,14 @@ export default function AddEmployee() {
                                     <DateInput
                                         label="Joining Date"
                                         placeholder="Select joining date"
-                                        value={formValues.joining_date}
-                                        onChange={(date) => handleChange('joining_date', date)}
+                                        value={formValues.joiningDate}
+                                        onChange={(date) => handleChange('joiningDate', date)}
                                         required
-                                        error={errors.joining_date}
-                                        valueFormat="YYYY-MM-DD"
+                                        error={errors.joiningDate}
+                                        // valueFormat="YYYY-MM-DD"
                                         size="md"
                                         radius="md"
-                                        clearable={false}
+                                        clearable={true}
                                         styles={(theme) => ({
                                             input: {
                                                 '&:focus': {
@@ -228,10 +228,10 @@ export default function AddEmployee() {
                                         label="Department"
                                         placeholder="Select department"
                                         data={departmentList.length > 0 ? departmentList : [{ value: '', label: 'Loading departments...' }]}
-                                        value={formValues.department_id}
-                                        onChange={(value) => handleChange('department_id', value)}
+                                        value={formValues.departmentId}
+                                        onChange={(value) => handleChange('departmentId', value)}
                                         required
-                                        error={errors.department_id}
+                                        error={errors.departmentId}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -251,10 +251,10 @@ export default function AddEmployee() {
                                         label="Designation"
                                         placeholder="Enter designation"
                                         data={designationList.length > 0 ? designationList : [{ value: '', label: 'Loading designation...' }]}
-                                        value={formValues.designation_id}
-                                        onChange={(value) => handleChange('designation_id', value)}
+                                        value={formValues.designationId}
+                                        onChange={(value) => handleChange('designationId', value)}
                                         required
-                                        error={errors.designation_id}
+                                        error={errors.designationId}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -274,10 +274,10 @@ export default function AddEmployee() {
                                         label="Shift"
                                         placeholder="Select shift"
                                         data={shiftList.length > 0 ? shiftList : [{ value: '', label: 'Loading shifts...' }]}
-                                        value={formValues.shift_id}
-                                        onChange={(value) => handleChange('shift_id', value)}
+                                        value={formValues.shiftId}
+                                        onChange={(value) => handleChange('shiftId', value)}
                                         required
-                                        error={errors.shift_id}
+                                        error={errors.shiftId}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -301,10 +301,10 @@ export default function AddEmployee() {
                                             { value: 'hourly', label: 'Hourly' },
                                             { value: 'daily', label: 'Daily' }
                                         ]}
-                                        value={formValues.salary_type}
-                                        onChange={(value) => handleChange('salary_type', value)}
+                                        value={formValues.salaryType}
+                                        onChange={(value) => handleChange('salaryType', value)}
                                         required
-                                        error={errors.salary_type}
+                                        error={errors.salaryType}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -456,9 +456,9 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="Postal Code"
                                         placeholder="Enter postal code"
-                                        value={formValues.postal_code}
-                                        onChange={(e) => handleChange('postal_code', e.currentTarget.value)}
-                                        error={errors.postal_code}
+                                        value={formValues.postalCode}
+                                        onChange={(e) => handleChange('postalCode', e.currentTarget.value)}
+                                        error={errors.postalCode}
                                         rightSection={
                                             isLoadingCity ? 
                                                 <IconLoader size={16} className="animate-spin" /> : 
@@ -514,8 +514,8 @@ export default function AddEmployee() {
                                     <DateInput
                                         label="Date of Birth"
                                         placeholder="Select date of birth"
-                                        value={formValues.date_of_birth}
-                                        onChange={(date) => handleChange('date_of_birth', date)}
+                                        value={formValues.dateOfBirth}
+                                        onChange={(date) => handleChange('dateOfBirth', date)}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -559,8 +559,8 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="Blood Group"
                                         placeholder="Enter blood group"
-                                        value={formValues.blood_group}
-                                        onChange={(e) => handleChange('blood_group', e.currentTarget.value)}
+                                        value={formValues.bloodGroup}
+                                        onChange={(e) => handleChange('bloodGroup', e.currentTarget.value)}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -579,8 +579,8 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="Emergency Contact"
                                         placeholder="Enter emergency contact"
-                                        value={formValues.emergency_contact}
-                                        onChange={(e) => handleChange('emergency_contact', e.currentTarget.value)}
+                                        value={formValues.emergencyContact}
+                                        onChange={(e) => handleChange('emergencyContact', e.currentTarget.value)}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -599,8 +599,8 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="Emergency Contact Name"
                                         placeholder="Enter emergency contact name"
-                                        value={formValues.emergency_name}
-                                        onChange={(e) => handleChange('emergency_name', e.currentTarget.value)}
+                                        value={formValues.emergencyName}
+                                        onChange={(e) => handleChange('emergencyName', e.currentTarget.value)}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -620,8 +620,8 @@ export default function AddEmployee() {
                                         label="Reporting Manager"
                                         placeholder="Enter reporting manager"
                                         data={managerList.length > 0 ? managerList : [{ value: '', label: 'Loading managers...' }]}
-                                        value={formValues.reporting_manager_id}
-                                        onChange={(value) => handleChange('reporting_manager_id', value)}
+                                        value={formValues.reportingManagerId}
+                                        onChange={(value) => handleChange('reportingManagerId', value)}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -640,8 +640,8 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="Bank Account Number"
                                         placeholder="Enter bank account number"
-                                        value={formValues.bank_account_number}
-                                        onChange={(e) => handleChange('bank_account_number', e.currentTarget.value)}
+                                        value={formValues.bankAccountNumber}
+                                        onChange={(e) => handleChange('bankAccountNumber', e.currentTarget.value)}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -660,8 +660,8 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="Bank IFSC"
                                         placeholder="Enter bank IFSC"
-                                        value={formValues.bank_ifsc}
-                                        onChange={(e) => handleChange('bank_ifsc', e.currentTarget.value)}
+                                        value={formValues.bankIfsc}
+                                        onChange={(e) => handleChange('bankIfsc', e.currentTarget.value)}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({
@@ -680,8 +680,8 @@ export default function AddEmployee() {
                                     <TextInput
                                         label="Bank Name"
                                         placeholder="Enter bank name"
-                                        value={formValues.bank_name}
-                                        onChange={(e) => handleChange('bank_name', e.currentTarget.value)}
+                                        value={formValues.bankName}
+                                        onChange={(e) => handleChange('bankName', e.currentTarget.value)}
                                         size="md"
                                         radius="md"
                                         styles={(theme) => ({

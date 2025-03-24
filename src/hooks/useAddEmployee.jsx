@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { selectLoading, selectDepartments, selectAddEmployeeStatus, selectAddEmployeeError, selectLastFetch } from '../store/slices/employeeSlice';
+import { selectLoading, selectDepartments, selectAddEmployeeStatus, selectAddEmployeeError } from '../store/slices/employeeSlice';
 import { addEmployee, fetchDepartments } from '../store/actions/employee';
 import { fetchDesignations } from '../store/actions/organisation/designation';
 import { fetchShifts } from '../store/actions/organisation/shift';
@@ -12,34 +12,34 @@ import { showError, showToast } from '../components/api';
 
 const initialFormState = {
     // Required fields
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     phone: '',
     email: '',
-    joining_date: null,
-    department_id: '',
-    designation_id: '',
-    shift_id: '',
-    salary_type: '',
+    joiningDate: null,
+    departmentId: '',
+    designationId: '',
+    shiftId: '',
+    salaryType: '',
     salary: '',
 
     // Optional fields
-    middle_name: '',
-    employee_code: '',
+    middleName: '',
+    employeeCode: '',
     address: '',
     country: '',
     state: '',
     city: '',
-    postal_code: '',
-    date_of_birth: null,
+    postalCode: '',
+    dateOfBirth: null,
     gender: '',
-    blood_group: '',
-    emergency_contact: '',
-    emergency_name: '',
-    reporting_manager_id: '',
-    bank_account_number: '',
-    bank_ifsc: '',
-    bank_name: '',
+    bloodGroup: '',
+    emergencyContact: '',
+    emergencyName: '',
+    reportingManagerId: '',
+    bankAccountNumber: '',
+    bankIfsc: '',
+    bankName: '',
 
     // Document fields
     educationalDocs: [],
@@ -62,7 +62,6 @@ export const useAddEmployee = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const organizationId = localStorage.getItem('orgId');
-    const lastFetch = useSelector(selectLastFetch);
 
     const [managers, setManagers] = useState([]);
 
@@ -83,9 +82,11 @@ export const useAddEmployee = () => {
                 await Promise.all([
                     dispatch(fetchDepartments(organizationId)),
                     dispatch(fetchDesignations(organizationId)),
-                    dispatch(fetchShifts(organizationId))
+                    dispatch(fetchShifts(organizationId)),
+                    setManagers([])
                 ]);
             } catch (error) {
+                console.error('Error loading initial data:', error);
                 showError('Failed to load initial data');
             } finally {
                 // Add a small delay before setting loading to false to ensure data is processed
@@ -140,21 +141,25 @@ export const useAddEmployee = () => {
     const handleChange = useCallback((field, value) => {
         setFormValues(prev => {
             // Handle date fields
-            if (field === 'joining_date' || field === 'date_of_birth') {
-                // Ensure we're working with the local timezone
-                if (value) {
-                    const date = new Date(value);
-                    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
-                    return { ...prev, [field]: date };
+            if (field === 'joiningDate' || field === 'dateOfBirth') {
+                // If value is null or undefined, return null
+                if (!value) {
+                    return { ...prev, [field]: null };
                 }
-                return { ...prev, [field]: null };
+                // If it's already a Date object, use it directly
+                if (value instanceof Date) {
+                    return { ...prev, [field]: value };
+                }
+                // Otherwise create a new Date object
+                const date = new Date(value);
+                return { ...prev, [field]: date };
             }
             return { ...prev, [field]: value };
         });
         setErrors(prev => ({ ...prev, [field]: '' }));
 
         // Auto-fetch city when postal code changes
-        if (field === 'postal_code' && value?.length === 6) {
+        if (field === 'postalCode' && value?.length === 6) {
             // Inline the fetch logic
             setIsLoadingCity(true);
             fetch(`https://api.postalpincode.in/pincode/${value}`)
@@ -172,12 +177,12 @@ export const useAddEmployee = () => {
                             country: 'IN'
                         }));
                     } else {
-                        setErrors(prev => ({ ...prev, postal_code: 'Invalid pincode' }));
+                        setErrors(prev => ({ ...prev, postalCode: 'Invalid pincode' }));
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching city:', error);
-                    setErrors(prev => ({ ...prev, postal_code: 'Failed to fetch city details' }));
+                    setErrors(prev => ({ ...prev, postalCode: 'Failed to fetch city details' }));
                 })
                 .finally(() => {
                     setIsLoadingCity(false);
@@ -194,25 +199,30 @@ export const useAddEmployee = () => {
         const newErrors = {};
 
         // Required field validations
-        if (!formValues.first_name?.trim()) newErrors.first_name = 'First name is required';
-        if (!formValues.last_name?.trim()) newErrors.last_name = 'Last name is required';
+        if (!formValues.firstName?.trim()) newErrors.firstName = 'First name is required';
+        if (!formValues.lastName?.trim()) newErrors.lastName = 'Last name is required';
         if (!formValues.phone?.trim()) newErrors.phone = 'Phone number is required';
         if (!formValues.email?.trim()) {
             newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
             newErrors.email = 'Invalid email format';
         }
-        if (!formValues.joining_date) newErrors.joining_date = 'Joining date is required';
-        if (!formValues.department_id || formValues.department_id === 'default') {
-            newErrors.department_id = 'Department is required';
+        
+        // Fix joiningDate validation to properly check for null/undefined/invalid dates
+        if (!formValues.joiningDate || !(formValues.joiningDate instanceof Date) || isNaN(formValues.joiningDate)) {
+            newErrors.joiningDate = 'Joining date is required';
         }
-        if (!formValues.designation_id || formValues.designation_id === 'default') {
-            newErrors.designation_id = 'Designation is required';
+
+        if (!formValues.departmentId || formValues.departmentId === 'default') {
+            newErrors.departmentId = 'Department is required';
         }
-        if (!formValues.shift_id || formValues.shift_id === 'default') {
-            newErrors.shift_id = 'Shift is required';
+        if (!formValues.designationId || formValues.designationId === 'default') {
+            newErrors.designationId = 'Designation is required';
         }
-        if (!formValues.salary_type) newErrors.salary_type = 'Salary type is required';
+        if (!formValues.shiftId || formValues.shiftId === 'default') {
+            newErrors.shiftId = 'Shift is required';
+        }
+        if (!formValues.salaryType) newErrors.salaryType = 'Salary type is required';
         if (!formValues.salary && formValues.salary !== 0) {
             newErrors.salary = 'Salary amount is required';
         }
@@ -223,8 +233,8 @@ export const useAddEmployee = () => {
         }
 
         // Emergency contact validation (only if provided)
-        if (formValues.emergency_contact && !/^\d{10}$/.test(formValues.emergency_contact)) {
-            newErrors.emergency_contact = 'Emergency contact must be 10 digits';
+        if (formValues.emergencyContact && !/^\d{10}$/.test(formValues.emergencyContact)) {
+            newErrors.emergencyContact = 'Emergency contact must be 10 digits';
         }
 
         return newErrors;
@@ -269,7 +279,7 @@ export const useAddEmployee = () => {
             });
 
             // Add organization ID
-            formData.append('organization_id', organizationId);
+            formData.append('organizationId', organizationId);
 
             // Dispatch addEmployee action
             await dispatch(addEmployee(formData)).unwrap();
@@ -302,9 +312,9 @@ export const useAddEmployee = () => {
         if (!isLoadingDepartments && !isLoadingDesignations && !isLoadingShifts) {
             setFormValues(prev => ({
                 ...prev,
-                department_id: prev.department_id || 'default',
-                designation_id: prev.designation_id || 'default',
-                shift_id: prev.shift_id || 'default'
+                departmentId: prev.departmentId || 'default',
+                designationId: prev.designationId || 'default',
+                shiftId: prev.shiftId || 'default'
             }));
         }
     }, [isLoadingDepartments, isLoadingDesignations, isLoadingShifts]);
@@ -327,4 +337,4 @@ export const useAddEmployee = () => {
         handleFileChange,
         handleSubmit
     };
-}; 
+};

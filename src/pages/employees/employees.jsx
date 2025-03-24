@@ -13,28 +13,28 @@ export default function Employees() {
     const columns = useMemo(() => [
         {
             header: 'Employee Name',
-            accessor: 'first_name',
+            accessor: 'firstName',
             render: (item) => (
                 <Text size="sm" fw={500}>
-                    {`${capitalizeFirstLetter(item.first_name)} ${capitalizeFirstLetter(item.last_name)}`}
+                    {`${capitalizeFirstLetter(item.firstName)} ${capitalizeFirstLetter(item.lastName)}`}
                 </Text>
             )
         },
         {
             header: 'Department',
-            accessor: 'department_name',
+            accessor: 'departmentName',
             render: (item) => (
                 <Text size="sm">
-                    {capitalizeFirstLetter(item.department_name) || 'N/A'}
+                    {capitalizeFirstLetter(item.departmentName) || 'N/A'}
                 </Text>
             )
         },
         {
             header: 'Designation',
-            accessor: 'designation_name',
+            accessor: 'designationName',
             render: (item) => (
                 <Text size="sm">
-                    {capitalizeFirstLetter(item.designation_name) || 'N/A'}
+                    {capitalizeFirstLetter(item.designationName) || 'N/A'}
                 </Text>
             )
         },

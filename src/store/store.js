@@ -9,7 +9,7 @@ import employeesSlice from './slices/employeeSlice';
 import holidaySlice from './slices/organisation/holidaySlice';
 import shiftSlice from './slices/organisation/shiftSlice';
 import designationSlice from './slices/organisation/designationSlice';
-// import attendanceReducer from './slices/attendanceSlice';
+import attendanceReducer from './slices/attendanceSlice';
 // import overtimeReducer from './slices/overtimeSlice';
 // import advanceSlice from './slices/advanceSlice';
 // import finesSlice from './slices/finesSlice';
@@ -30,7 +30,7 @@ const store = configureStore({
         designations: designationSlice,
         // theme: themeSlice,
         // network: networkSlice,
-        // attendance: attendanceReducer,
+        attendance: attendanceReducer,
         // overtime: overtimeReducer,
         // advance: advanceSlice,
         // fines: finesSlice,
