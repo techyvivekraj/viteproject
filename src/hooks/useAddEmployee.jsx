@@ -16,7 +16,7 @@ const initialFormState = {
     lastName: '',
     phone: '',
     email: '',
-    joiningDate: null,
+    joiningDate: new Date(),
     departmentId: '',
     designationId: '',
     shiftId: '',
@@ -142,9 +142,12 @@ export const useAddEmployee = () => {
         setFormValues(prev => {
             // Handle date fields
             if (field === 'joiningDate' || field === 'dateOfBirth') {
-                // If value is null or undefined, return null
+                // If value is null or undefined, keep the previous value for joiningDate
                 if (!value) {
-                    return { ...prev, [field]: null };
+                    return { 
+                        ...prev, 
+                        [field]: field === 'joiningDate' ? prev[field] : null 
+                    };
                 }
                 // If it's already a Date object, use it directly
                 if (value instanceof Date) {
@@ -208,9 +211,16 @@ export const useAddEmployee = () => {
             newErrors.email = 'Invalid email format';
         }
         
-        // Fix joiningDate validation to properly check for null/undefined/invalid dates
-        if (!formValues.joiningDate || !(formValues.joiningDate instanceof Date) || isNaN(formValues.joiningDate)) {
+        // Enhanced joining date validation
+        if (!formValues.joiningDate) {
             newErrors.joiningDate = 'Joining date is required';
+        } else if (!(formValues.joiningDate instanceof Date) || isNaN(formValues.joiningDate)) {
+            newErrors.joiningDate = 'Invalid joining date';
+        } else {
+            const minDate = new Date(2025, 0, 1);
+            if (formValues.joiningDate < minDate) {
+                newErrors.joiningDate = 'Joining date cannot be before year 2000';
+            }
         }
 
         if (!formValues.departmentId || formValues.departmentId === 'default') {
@@ -267,9 +277,10 @@ export const useAddEmployee = () => {
                 } else if (formValues[key] !== null && formValues[key] !== '') {
                     // Handle date objects
                     if (formValues[key] instanceof Date) {
-                        // Format date in ISO string but keep local timezone
-                        const date = new Date(formValues[key]);
-                        formData.append(key, date.toISOString());
+                        // Format date in YYYY-MM-DD format
+                        const date = formValues[key];
+                        const formattedDate = date.toISOString().split('T')[0];
+                        formData.append(key, formattedDate);
                     } else if (key === 'salary') {
                         formData.append(key, Number(formValues[key]));
                     } else {

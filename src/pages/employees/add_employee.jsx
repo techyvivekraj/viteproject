@@ -207,10 +207,19 @@ export default function AddEmployee() {
                                         onChange={(date) => handleChange('joiningDate', date)}
                                         required
                                         error={errors.joiningDate}
-                                        // valueFormat="YYYY-MM-DD"
+                                        clearable={false}
+                                        valueFormat="DD/MM/YYYY"
+                                        minDate={new Date(2000, 0, 1)}
+                                        maxDate={new Date(2100, 0, 1)}
                                         size="md"
                                         radius="md"
-                                        clearable={true}
+                                        rightSection={
+                                            <Tooltip label="Select employee joining date">
+                                                <ActionIcon size="sm" variant="subtle">
+                                                    <IconInfoCircle size={16} />
+                                                </ActionIcon>
+                                            </Tooltip>
+                                        }
                                         styles={(theme) => ({
                                             input: {
                                                 '&:focus': {
@@ -218,7 +227,11 @@ export default function AddEmployee() {
                                                 }
                                             },
                                             label: {
-                                                marginBottom: 4
+                                                marginBottom: 4,
+                                                fontWeight: 500
+                                            },
+                                            required: {
+                                                color: theme.colors.red[7]
                                             }
                                         })}
                                     />
