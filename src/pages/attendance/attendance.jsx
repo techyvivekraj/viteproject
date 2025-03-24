@@ -1,4 +1,4 @@
-import {  useMemo } from 'react';
+import { useMemo } from 'react';
 import { 
     Text, 
     Paper, 
@@ -9,9 +9,17 @@ import {
     ActionIcon,
     Menu,
     Stack,
+    Tooltip
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
-import { IconCheck, IconX, IconDotsVertical, IconCamera } from '@tabler/icons-react';
+import { 
+    IconCheck, 
+    IconX, 
+    IconDotsVertical, 
+    IconCamera,
+    IconClock,
+    IconCalendar 
+} from '@tabler/icons-react';
 import DataTable from '../../components/DataTable/datatable';
 import { useAttendance } from '../../hooks/useAttendance';
 import { capitalizeFirstLetter } from '../../utils/utils';
@@ -23,6 +31,12 @@ const statusColors = {
     late: 'orange',
     leave: 'blue',
     'not_set': 'gray'
+};
+
+const approvalStatusColors = {
+    pending: 'yellow',
+    approved: 'green',
+    rejected: 'red'
 };
 
 export default function Attendance() {
@@ -39,16 +53,28 @@ export default function Attendance() {
 
     const columns = useMemo(() => [
         {
+            header: 'Date',
+            accessor: 'date',
+            render: (item) => (
+                <Group spacing={4}>
+                    <IconCalendar size={16} />
+                    <Text size="sm">
+                        {new Date(item.date).toLocaleDateString()}
+                    </Text>
+                </Group>
+            )
+        },
+        {
             header: 'Employee',
-            accessor: 'employee_name',
+            accessor: 'employee',
             render: (item) => (
                 <Group spacing="xs">
                     <div>
                         <Text size="sm" fw={500}>
-                            {`${capitalizeFirstLetter(item.first_name)} ${capitalizeFirstLetter(item.last_name)}`}
+                            {item.employee.name}
                         </Text>
                         <Text size="xs" color="dimmed">
-                            {item.employee_code}
+                            {item.employee.code}
                         </Text>
                     </div>
                 </Group>
@@ -56,59 +82,43 @@ export default function Attendance() {
         },
         {
             header: 'Department',
-            accessor: 'department_name',
+            accessor: 'department',
             render: (item) => (
                 <Text size="sm">
-                    {capitalizeFirstLetter(item.department_name)}
+                    {capitalizeFirstLetter(item.department)}
                 </Text>
             )
         },
         {
             header: 'Shift',
-            accessor: 'shift_name',
+            accessor: 'shift',
             render: (item) => (
-                <Text size="sm">
-                    {item.shift_name}
-                    <Text size="xs" color="dimmed">
-                        {`${item.shift_start_time} - ${item.shift_end_time}`}
+                <Tooltip label={`${item.shift.startTime} - ${item.shift.endTime}`}>
+                    <Text size="sm">
+                        {item.shift.name}
                     </Text>
-                </Text>
+                </Tooltip>
             )
         },
         {
             header: 'Check In/Out',
-            accessor: 'check_in',
+            accessor: 'checkIn',
             render: (item) => (
-                <Group spacing="xs">
-                    {item.check_in ? (
-                        <Text size="sm">
-                            {new Date(item.check_in).toLocaleTimeString()}
-                            {item.check_in_photo && (
-                                <ActionIcon 
-                                    variant="subtle" 
-                                    size="xs"
-                                    onClick={() => window.open(item.check_in_photo)}
-                                >
-                                    <IconCamera size={14} />
-                                </ActionIcon>
-                            )}
-                        </Text>
-                    ) : '-'}
-                    {' / '}
-                    {item.check_out ? (
-                        <Text size="sm">
-                            {new Date(item.check_out).toLocaleTimeString()}
-                            {item.check_out_photo && (
-                                <ActionIcon 
-                                    variant="subtle" 
-                                    size="xs"
-                                    onClick={() => window.open(item.check_out_photo)}
-                                >
-                                    <IconCamera size={14} />
-                                </ActionIcon>
-                            )}
-                        </Text>
-                    ) : '-'}
+                <Group spacing={4}>
+                    <IconClock size={16} />
+                    <Group spacing="xs">
+                        {item.checkIn ? (
+                            <Text size="sm">
+                                {new Date(item.checkIn).toLocaleTimeString()}
+                            </Text>
+                        ) : '-'}
+                        {' / '}
+                        {item.checkOut ? (
+                            <Text size="sm">
+                                {new Date(item.checkOut).toLocaleTimeString()}
+                            </Text>
+                        ) : '-'}
+                    </Group>
                 </Group>
             )
         },
@@ -120,15 +130,25 @@ export default function Attendance() {
                     <Badge color={statusColors[item.status]} variant="light">
                         {capitalizeFirstLetter(item.status.replace('_', ' '))}
                     </Badge>
-                    {item.approval_status && (
+                    {item.approvalStatus && (
                         <Badge 
-                            color={item.approval_status === 'approved' ? 'green' : 'orange'} 
+                            color={approvalStatusColors[item.approvalStatus]} 
                             variant="dot"
+                            size="sm"
                         >
-                            {capitalizeFirstLetter(item.approval_status)}
+                            {capitalizeFirstLetter(item.approvalStatus)}
                         </Badge>
                     )}
                 </Group>
+            )
+        },
+        {
+            header: 'Work Hours',
+            accessor: 'workHours',
+            render: (item) => (
+                <Text size="sm">
+                    {item.workHours ? `${item.workHours.toFixed(2)} hrs` : '-'}
+                </Text>
             )
         },
         {
@@ -142,35 +162,23 @@ export default function Attendance() {
                         </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                        {!item.check_in && (
+                        {!item.checkIn && (
                             <Menu.Item
                                 leftSection={<IconCheck size={14} />}
-                                onClick={() => handleCheckIn({ 
-                                    employeeId: item.employee_id,
-                                    shiftId: item.shift_id,
-                                    date: new Date(),
-                                    checkInTime: new Date(),
-                                    checkInLocation: { latitude: 0, longitude: 0 }, // Replace with actual location
-                                    checkInPhoto: '' // Replace with actual photo
-                                })}
+                                onClick={() => handleCheckIn(item.employee.id)}
                             >
                                 Mark Check In
                             </Menu.Item>
                         )}
-                        {item.check_in && !item.check_out && (
+                        {item.checkIn && !item.checkOut && (
                             <Menu.Item
                                 leftSection={<IconCheck size={14} />}
-                                onClick={() => handleCheckOut({ 
-                                    id: item.id,
-                                    checkOutTime: new Date(),
-                                    checkOutLocation: { latitude: 0, longitude: 0 }, // Replace with actual location
-                                    checkOutPhoto: '' // Replace with actual photo
-                                })}
+                                onClick={() => handleCheckOut(item.id)}
                             >
                                 Mark Check Out
                             </Menu.Item>
                         )}
-                        {item.approval_status === 'pending' && (
+                        {item.approvalStatus === 'pending' && (
                             <>
                                 <Menu.Item
                                     leftSection={<IconCheck size={14} />}
@@ -187,7 +195,7 @@ export default function Attendance() {
                                     onClick={() => handleUpdateApproval({ 
                                         id: item.id, 
                                         status: 'rejected',
-                                        rejectionReason: 'Invalid attendance' // Add proper reason handling
+                                        rejectionReason: 'Invalid attendance'
                                     })}
                                     color="red"
                                 >
@@ -214,6 +222,7 @@ export default function Attendance() {
                             handleFilterChange('endDate', end);
                         }}
                         placeholder="Pick dates range"
+                        clearable
                     />
                     <TextInput
                         label="Search Employee"
@@ -228,32 +237,30 @@ export default function Attendance() {
                         placeholder="All Departments"
                         data={[]} // Add department data here
                         clearable
-                        allowDeselect
                     />
                     <Select
                         label="Status"
-                        value={filters.status || 'not_set'}
+                        value={filters.status}
                         onChange={(value) => handleFilterChange('status', value)}
                         data={[
-                            { value: 'not_set', label: 'Not Set' },
                             { value: 'present', label: 'Present' },
                             { value: 'absent', label: 'Absent' },
                             { value: 'half-day', label: 'Half Day' },
                             { value: 'late', label: 'Late' },
                             { value: 'leave', label: 'Leave' }
                         ]}
-                        defaultValue="not_set"
-                        clearable={false}
+                        placeholder="All Status"
+                        clearable
                     />
                 </Group>
 
                 <DataTable
                     title="Attendance List"
-                    data={attendance.data}
+                    data={attendance?.data || []}
                     columns={columns}
                     loading={loading}
                     pagination={{
-                        total: attendance.pagination.total,
+                        total: attendance?.pagination?.total || 0,
                         page: filters.page,
                         onChange: handlePageChange
                     }}

@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import { Paper, Title, Text, Button, Stack, Group } from '@mantine/core';
 import PropTypes from 'prop-types';
-import { IconAlertCircle, IconRefresh } from '@tabler/icons-react';
+import { IconAlertCircle } from '@tabler/icons-react';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -67,7 +67,6 @@ class ErrorBoundary extends Component {
             <Group>
               <Button
                 variant="light"
-                leftIcon={<IconRefresh size={16} />}
                 onClick={this.handleReload}
               >
                 Reload Page

@@ -38,6 +38,7 @@ const initialFormState = {
     emergencyName: '',
     reportingManagerId: '',
     bankAccountNumber: '',
+    confirmBankAccountNumber: '',
     bankIfsc: '',
     bankName: '',
 
