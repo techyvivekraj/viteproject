@@ -53,28 +53,16 @@ export default function Attendance() {
 
     const columns = useMemo(() => [
         {
-            header: 'Date',
-            accessor: 'date',
-            render: (item) => (
-                <Group spacing={4}>
-                    <IconCalendar size={16} />
-                    <Text size="sm">
-                        {new Date(item.date).toLocaleDateString()}
-                    </Text>
-                </Group>
-            )
-        },
-        {
             header: 'Employee',
             accessor: 'employee',
             render: (item) => (
                 <Group spacing="xs">
                     <div>
                         <Text size="sm" fw={500}>
-                            {item.employee.name}
+                            {item.employee?.name || 'N/A'}
                         </Text>
                         <Text size="xs" color="dimmed">
-                            {item.employee.code}
+                            {item.employee?.code || 'No Code'}
                         </Text>
                     </div>
                 </Group>
@@ -85,7 +73,7 @@ export default function Attendance() {
             accessor: 'department',
             render: (item) => (
                 <Text size="sm">
-                    {capitalizeFirstLetter(item.department)}
+                    {capitalizeFirstLetter(item.department || 'Not Assigned')}
                 </Text>
             )
         },
@@ -93,9 +81,9 @@ export default function Attendance() {
             header: 'Shift',
             accessor: 'shift',
             render: (item) => (
-                <Tooltip label={`${item.shift.startTime} - ${item.shift.endTime}`}>
+                <Tooltip label={`${item.shift?.startTime || '09:00'} - ${item.shift?.endTime || '18:00'}`}>
                     <Text size="sm">
-                        {item.shift.name}
+                        {item.shift?.name || 'Default'}
                     </Text>
                 </Tooltip>
             )
@@ -107,17 +95,11 @@ export default function Attendance() {
                 <Group spacing={4}>
                     <IconClock size={16} />
                     <Group spacing="xs">
-                        {item.checkIn ? (
-                            <Text size="sm">
-                                {new Date(item.checkIn).toLocaleTimeString()}
-                            </Text>
-                        ) : '-'}
-                        {' / '}
-                        {item.checkOut ? (
-                            <Text size="sm">
-                                {new Date(item.checkOut).toLocaleTimeString()}
-                            </Text>
-                        ) : '-'}
+                        <Text size="sm">
+                            {item.checkIn ? new Date(item.checkIn).toLocaleTimeString() : '-'}
+                            {' / '}
+                            {item.checkOut ? new Date(item.checkOut).toLocaleTimeString() : '-'}
+                        </Text>
                     </Group>
                 </Group>
             )
@@ -127,8 +109,8 @@ export default function Attendance() {
             accessor: 'status',
             render: (item) => (
                 <Group spacing="xs">
-                    <Badge color={statusColors[item.status]} variant="light">
-                        {capitalizeFirstLetter(item.status.replace('_', ' '))}
+                    <Badge color={statusColors[item.status || 'not_set']} variant="light">
+                        {capitalizeFirstLetter((item.status || 'not_set').replace('_', ' '))}
                     </Badge>
                     {item.approvalStatus && (
                         <Badge 
@@ -147,7 +129,7 @@ export default function Attendance() {
             accessor: 'workHours',
             render: (item) => (
                 <Text size="sm">
-                    {item.workHours ? `${item.workHours.toFixed(2)} hrs` : '-'}
+                    {item.workHours ? `${Number(item.workHours).toFixed(2)} hrs` : '-'}
                 </Text>
             )
         },
@@ -222,7 +204,8 @@ export default function Attendance() {
                             handleFilterChange('endDate', end);
                         }}
                         placeholder="Pick dates range"
-                        clearable
+                        clearable={false}
+                        defaultValue={[new Date(), new Date()]}
                     />
                     <TextInput
                         label="Search Employee"
@@ -262,8 +245,10 @@ export default function Attendance() {
                     pagination={{
                         total: attendance?.pagination?.total || 0,
                         page: filters.page,
-                        onChange: handlePageChange
+                        onChange: handlePageChange,
+                        limit: filters.limit
                     }}
+                    noDataText="No attendance records found"
                 />
             </Stack>
         </Paper>

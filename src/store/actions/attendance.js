@@ -6,12 +6,17 @@ export const fetchAttendance = createAsyncThunk(
     'attendance/fetchAttendance',
     async ({ organizationId, filters = {} }, { rejectWithValue }) => {
         try {
+            // Format dates properly
+            const formattedFilters = {
+                ...filters,
+                startDate: filters.startDate ? new Date(filters.startDate).toISOString().split('T')[0] : undefined,
+                endDate: filters.endDate ? new Date(filters.endDate).toISOString().split('T')[0] : undefined
+            };
+
             // Remove null/undefined/empty string values from params
             const params = Object.entries({
                 organizationId,
-                ...filters,
-                startDate: filters.startDate?.toISOString(),
-                endDate: filters.endDate?.toISOString()
+                ...formattedFilters
             }).reduce((acc, [key, value]) => {
                 if (value != null && value !== '') {
                     acc[key] = value;
@@ -20,8 +25,15 @@ export const fetchAttendance = createAsyncThunk(
             }, {});
 
             const response = await axiosInstance.get('/attendance', { params });
+            
+            // Check if response has the expected structure
+            if (!response.data || !response.data.data) {
+                throw new Error('Invalid response format');
+            }
+
             return response.data;
         } catch (error) {
+            console.error('Fetch attendance error:', error);
             return rejectWithValue(error.response?.data || 'Failed to fetch attendance');
         }
     }

@@ -18,41 +18,40 @@ import { showError, showToast } from '../components/api';
 export const useAttendance = () => {
     const dispatch = useDispatch();
     const organizationId = localStorage.getItem('orgId');
+    
+    // Get attendance data from redux store
     const attendance = useSelector(selectAttendance) || {
         data: [],
-        pagination: {
-            total: 0,
-            page: 1,
-            limit: 10,
-            totalPages: 0
-        }
+        pagination: { total: 0, page: 1, limit: 10, totalPages: 0 }
     };
     const loading = useSelector(selectLoading);
     const checkInStatus = useSelector(selectCheckInStatus);
     const checkOutStatus = useSelector(selectCheckOutStatus);
     const approvalStatus = useSelector(selectApprovalStatus);
 
-    // Initialize with current date only
+    // Initialize filters with proper date objects
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     const [filters, setFilters] = useState({
         startDate: today,
         endDate: today,
+        employeeName: '',
+        departmentId: '',
+        status: '',
         page: 1,
         limit: 10
     });
 
     useEffect(() => {
         if (organizationId) {
+            console.log('Fetching attendance with filters:', filters); // Debug log
             dispatch(fetchAttendance({ 
                 organizationId, 
                 filters: {
+                    ...filters,
                     startDate: filters.startDate,
-                    endDate: filters.endDate,
-                    page: filters.page,
-                    limit: filters.limit,
-                    ...(filters.departmentId && { departmentId: filters.departmentId }),
-                    ...(filters.employeeName && { employeeName: filters.employeeName.trim() }),
-                    ...(filters.status && filters.status !== 'not_set' && { status: filters.status })
+                    endDate: filters.endDate
                 }
             }));
         }
@@ -105,10 +104,11 @@ export const useAttendance = () => {
     }, []);
 
     const handleFilterChange = useCallback((key, value) => {
+        console.log('Filter changing:', key, value); // Debug log
         setFilters(prev => ({ 
             ...prev, 
             [key]: value,
-            page: 1 // Reset to first page when filters change
+            page: key !== 'page' ? 1 : value
         }));
     }, []);
 

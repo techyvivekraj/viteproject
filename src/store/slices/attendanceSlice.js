@@ -58,6 +58,7 @@ const attendanceSlice = createSlice({
             .addCase(fetchAttendance.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+                state.attendance = initialState.attendance;
             })
 
             // Mark Check-in
