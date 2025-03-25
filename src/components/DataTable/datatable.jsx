@@ -48,6 +48,7 @@ const DataTable = ({
     monthPickerPlaceholder,
     hideMonthPicker,
     hideHeader = false,
+    hideActions = false,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
@@ -106,31 +107,28 @@ const DataTable = ({
                     {column.render ? column.render(item) : item[column.accessor]}
                 </Table.Td>
             ))}
-            <Table.Td>
-                {/* Center the action buttons */}
-                <Group gap={0} position="center">
-                    {/* Conditional rendering for "View" action */}
-                    {onViewClick && (
-                        <ActionIcon variant="subtle" color="gray" onClick={() => onViewClick(item)}>
-                            <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-                        </ActionIcon>
-                    )}
-
-                    {/* Conditional rendering for "Edit" action */}
-                    {onEditClick && (
-                        <ActionIcon variant="subtle" color="gray" onClick={() => onEditClick(item)}>
-                            <IconPencil style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-                        </ActionIcon>
-                    )}
-
-                    {/* Conditional rendering for "Delete" action */}
-                    {onDeleteClick && (
-                        <ActionIcon variant="subtle" color="red" onClick={() => onDeleteClick(item)}>
-                            <IconTrash style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-                        </ActionIcon>
-                    )}
-                </Group>
-            </Table.Td>
+            {/* Only render action column if not hidden and at least one action exists */}
+            {!hideActions && (onViewClick || onEditClick || onDeleteClick) && (
+                <Table.Td>
+                    <Group gap={0} position="center">
+                        {onViewClick && (
+                            <ActionIcon variant="subtle" color="gray" onClick={() => onViewClick(item)}>
+                                <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                            </ActionIcon>
+                        )}
+                        {onEditClick && (
+                            <ActionIcon variant="subtle" color="gray" onClick={() => onEditClick(item)}>
+                                <IconPencil style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                            </ActionIcon>
+                        )}
+                        {onDeleteClick && (
+                            <ActionIcon variant="subtle" color="red" onClick={() => onDeleteClick(item)}>
+                                <IconTrash style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                            </ActionIcon>
+                        )}
+                    </Group>
+                </Table.Td>
+            )}
         </Table.Tr>
     ));
 
@@ -210,7 +208,10 @@ const DataTable = ({
                                         </Group>
                                     </Table.Th>
                                 ))}
-                                <Table.Th>Action</Table.Th>
+                                {/* Only render action header if not hidden and at least one action exists */}
+                                {!hideActions && (onViewClick || onEditClick || onDeleteClick) && (
+                                    <Table.Th>Action</Table.Th>
+                                )}
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>{rows}</Table.Tbody>
@@ -253,6 +254,7 @@ DataTable.propTypes = {
     monthPickerPlaceholder: PropTypes.string,
     hideMonthPicker: PropTypes.bool,
     hideHeader: PropTypes.bool,
+    hideActions: PropTypes.bool,
     pagination: PropTypes.shape({
         total: PropTypes.number,
         page: PropTypes.number,
@@ -267,7 +269,8 @@ DataTable.defaultProps = {
     hideHeader: false,
     hideMonthPicker: false,
     isLoading: false,
-    title: ''
+    title: '',
+    hideActions: false,
 };
 
 export default DataTable;

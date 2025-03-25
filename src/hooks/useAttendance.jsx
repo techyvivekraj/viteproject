@@ -136,11 +136,21 @@ export const useAttendance = () => {
                 return recordDate >= startDate && recordDate <= endDate;
             });
 
+            const present = dateRangeRecords.filter(r => r.status === 'present').length;
+            const late = dateRangeRecords.filter(r => r.status === 'late').length;
+            const absent = dateRangeRecords.filter(r => r.status === 'absent').length;
+            const pending = dateRangeRecords.filter(r => r.approvalStatus === 'pending').length;
+            
+            // Calculate not set as total employees minus sum of other statuses
+            const totalEmployees = attendance.pagination?.total || 0;
+            const notSet = totalEmployees - (present + late + absent);
+
             setStats({
-                presentCount: dateRangeRecords.filter(r => r.status === 'present').length,
-                lateCount: dateRangeRecords.filter(r => r.status === 'late').length,
-                absentCount: dateRangeRecords.filter(r => r.status === 'absent').length,
-                pendingCount: dateRangeRecords.filter(r => r.approvalStatus === 'pending').length
+                presentCount: present,
+                lateCount: late,
+                absentCount: absent,
+                pendingCount: pending,
+                notSetCount: notSet > 0 ? notSet : 0 // Ensure it doesn't go negative
             });
         }
     }, [attendance, filters.startDate, filters.endDate]);

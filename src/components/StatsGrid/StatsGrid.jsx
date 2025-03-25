@@ -39,7 +39,7 @@ const defaultData = [
   { title: 'Pending Approvals', icon: 'alerts', value: '7', diff: -2 },
 ];
 
-export default function StatsGrid({ data = defaultData, showDiff = false }) {
+export default function StatsGrid({ data = defaultData, showDiff = false, vertical = false }) {
   const stats = data.map((stat) => {
     const Icon = icons[stat.icon];
     const DiffIcon = stat.diff > 0 ? IconArrowUpRight : IconArrowDownRight;
@@ -79,7 +79,7 @@ export default function StatsGrid({ data = defaultData, showDiff = false }) {
 
   return (
     <SimpleGrid 
-      cols={{ base: 1, xs: 2, sm: 3, md: data.length > 3 ? 4 : data.length }} 
+      cols={{ base: 1, xs: 2, sm: 3, md: 5 }} 
       spacing="md"
     >
       {stats}
@@ -97,5 +97,6 @@ StatsGrid.propTypes = {
       color: PropTypes.string,
     })
   ),
-  showDiff: PropTypes.bool
+  showDiff: PropTypes.bool,
+  vertical: PropTypes.bool
 };

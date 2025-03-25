@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
     Text,
     Paper,
     Group,
     Select,
     TextInput,
-    Badge,
     ActionIcon,
     Menu,
     Stack,
@@ -17,21 +16,331 @@ import {
     Grid,
 } from '@mantine/core';
 import { DatePickerInput, TimeInput } from '@mantine/dates';
-import { IconDotsVertical, IconSearch, } from '@tabler/icons-react';
+import { IconDotsVertical, IconSearch, IconClock, IconEdit, IconUserCheck, IconAlertCircle, IconCalendarTime } from '@tabler/icons-react';
 import DataTable from '../../components/DataTable/datatable';
 import { useAttendance } from '../../hooks/useAttendance';
-import { capitalizeFirstLetter } from '../../utils/utils';
 import StatsGrid from '../../components/StatsGrid/StatsGrid';
+import PropTypes from 'prop-types';
 
 const statusColors = {
-    present: 'green',
-    absent: 'red',
-    'half-day': 'yellow',
-    late: 'orange',
-    leave: 'blue',
-    pending: 'gray',
-    rejected: 'red'
+    'not set': '#228BE6',     // Blue
+    pending: '#FCC419',       // Yellow
+    approved: '#40C057',      // Green
+    rejected: '#FA5252',      // Red
+    present: '#40C057',       // Green
+    absent: '#FA5252',        // Red
+    'half-day': '#FD7E14',    // Orange
+    late: '#FCC419'          // Yellow
 };
+
+const MenuButton = ({ icon: Icon, label, color = 'blue', onClick }) => (
+    <Menu.Item
+        onClick={onClick}
+        leftSection={<Icon size={16} stroke={1.5} color={`var(--mantine-color-${color}-filled)`} />}
+        sx={(theme) => ({
+            '&:hover': {
+                backgroundColor: theme.fn.rgba(theme.colors[color][1], 0.1),
+            }
+        })}
+    >
+        {label}
+    </Menu.Item>
+);
+
+MenuButton.propTypes = {
+    icon: PropTypes.elementType.isRequired,
+    label: PropTypes.string.isRequired,
+    color: PropTypes.string,
+    onClick: PropTypes.func.isRequired
+};
+
+MenuButton.defaultProps = {
+    color: 'blue'
+};
+
+const formatTime = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+};
+
+const formatShiftTime = (time) => {
+    if (!time) return '';
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+};
+
+const EmployeeCell = ({ item }) => (
+    <Text size="sm" fw={500}>{item.employee?.name}</Text>
+);
+
+EmployeeCell.propTypes = {
+    item: PropTypes.shape({
+        employee: PropTypes.shape({
+            id: PropTypes.string.isRequired,
+            name: PropTypes.string.isRequired
+        })
+    }).isRequired
+};
+
+const DepartmentCell = ({ item }) => (
+    <Text size="sm">{item.department || 'Not Assigned'}</Text>
+);
+
+DepartmentCell.propTypes = {
+    item: PropTypes.shape({
+        department: PropTypes.string
+    }).isRequired
+};
+
+const TimeCell = ({ item }) => (
+    <Stack spacing={2}>
+        <Group spacing={8}>
+            <Group spacing={4} w={95}>
+                <IconClock size={14} stroke={1.5} color="var(--mantine-color-gray-6)" />
+                <Text size="sm" fw={500}>
+                    {item.checkIn ? new Date(item.checkIn).toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                    }) : '-'}
+                </Text>
+            </Group>
+            <Text size="sm" c="dimmed">→</Text>
+            <Text size="sm" fw={500}>
+                {item.checkOut ? new Date(item.checkOut).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                }) : '-'}
+            </Text>
+        </Group>
+        {item.workHours > 0 && (
+            <Text size="xs" c="dimmed">{item.workHours.toFixed(1)} hrs</Text>
+        )}
+    </Stack>
+);
+
+TimeCell.propTypes = {
+    item: PropTypes.shape({
+        checkIn: PropTypes.string,
+        checkOut: PropTypes.string,
+        workHours: PropTypes.number
+    }).isRequired
+};
+
+const StatusCell = ({ item }) => {
+    const status = item.status || 'not set';
+    const color = statusColors[status];
+    
+    return (
+        <Text 
+            size="sm"
+            fw={600}
+            sx={{
+                color: color,
+                textTransform: 'uppercase',
+                letterSpacing: '0.4px'
+            }}
+            tt={'capitalize'}
+        >
+            {status}
+        </Text>
+    );
+};
+
+StatusCell.propTypes = {
+    item: PropTypes.shape({
+        status: PropTypes.oneOf(['not set', 'pending', 'approved', 'rejected', 'present', 'absent', 'half-day', 'late'])
+    }).isRequired
+};
+
+const ActionsCell = ({ item, onMarkAttendance, onEdit, onApprove, onReject }) => {
+    const isManager = true; // TODO: Replace with actual manager check
+    const status = item.status || 'not set';
+    
+    return (
+        <Menu position="bottom-end" withArrow>
+            <Menu.Target>
+                <ActionIcon 
+                    variant="light" 
+                    color="blue" 
+                    size="md"
+                    radius="md"
+                    sx={(theme) => ({
+                        '&:hover': {
+                            backgroundColor: theme.fn.rgba(theme.colors.blue[1], 0.1),
+                        }
+                    })}
+                >
+                    <IconDotsVertical size={16} />
+                </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+                {status === 'not set' && (
+                    <MenuButton
+                        icon={IconCalendarTime}
+                        label="Mark Attendance"
+                        color="blue"
+                        onClick={() => onMarkAttendance(item)}
+                    />
+                )}
+
+                {isManager && status !== 'not set' && (
+                    <MenuButton
+                        icon={IconEdit}
+                        label="Edit Attendance"
+                        color="violet"
+                        onClick={() => onEdit(item)}
+                    />
+                )}
+
+                {isManager && status === 'pending' && (
+                    <>
+                        <MenuButton
+                            icon={IconUserCheck}
+                            label="Approve"
+                            color="teal"
+                            onClick={() => onApprove(item)}
+                        />
+                        <MenuButton
+                            icon={IconAlertCircle}
+                            label="Reject"
+                            color="red"
+                            onClick={() => onReject(item)}
+                        />
+                    </>
+                )}
+            </Menu.Dropdown>
+        </Menu>
+    );
+};
+
+ActionsCell.propTypes = {
+    item: PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        status: PropTypes.oneOf(['not set', 'pending', 'approved', 'rejected', 'present', 'absent', 'half-day', 'late']),
+        employee: PropTypes.shape({
+            id: PropTypes.string.isRequired,
+            name: PropTypes.string.isRequired
+        }).isRequired
+    }).isRequired,
+    onMarkAttendance: PropTypes.func.isRequired,
+    onEdit: PropTypes.func.isRequired,
+    onApprove: PropTypes.func.isRequired,
+    onReject: PropTypes.func.isRequired
+};
+
+// Move ActionModal outside the main component to prevent recreation on every render
+const ActionModal = ({ 
+    opened, 
+    onClose, 
+    actionType, 
+    selectedAttendance, 
+    checkInTime,
+    checkOutTime,
+    remarks,
+    onCheckInTimeChange,
+    onCheckOutTimeChange,
+    onRemarksChange,
+    onStatusChange,
+    onSubmit 
+}) => (
+    <Modal
+        opened={opened}
+        onClose={onClose}
+        title={
+            <Text size="lg" weight={600}>
+                {actionType === 'mark-attendance' ? 'Mark Attendance' :
+                 actionType === 'edit' ? 'Edit Attendance' :
+                 actionType === 'approve' ? 'Approve Attendance' : 
+                 'Reject Attendance'}
+            </Text>
+        }
+        radius="md"
+        padding="lg"
+        size="md"
+    >
+        <Stack>
+            {/* Show shift timing info */}
+            {(actionType === 'mark-attendance' || actionType === 'edit') && selectedAttendance?.shift && (
+                <Paper withBorder p="xs" radius="md" bg="var(--mantine-color-blue-0)">
+                    <Group spacing="xs">
+                        <IconClock size={16} stroke={1.5} />
+                        <Text size="sm" fw={500}>Shift Time:</Text>
+                        <Text size="sm">
+                            {formatShiftTime(selectedAttendance.shift.startTime)} - {formatShiftTime(selectedAttendance.shift.endTime)}
+                        </Text>
+                    </Group>
+                </Paper>
+            )}
+
+            {/* Show time inputs for mark-attendance and edit */}
+            {(actionType === 'mark-attendance' || actionType === 'edit') && (
+                <>
+                    <TimeInput
+                        label="Check In Time"
+                        value={checkInTime}
+                        onChange={(e) => onCheckInTimeChange(e.target.value)}
+                        format="24"
+                        required
+                        clearable
+                        icon={<IconClock size={16} />}
+                    />
+                    <TimeInput
+                        label="Check Out Time"
+                        value={checkOutTime}
+                        onChange={(e) => onCheckOutTimeChange(e.target.value)}
+                        format="24"
+                        clearable
+                        icon={<IconClock size={16} />}
+                        error={checkOutTime && checkInTime && checkOutTime < checkInTime ? 
+                            'Check-out time must be after check-in time' : null}
+                    />
+                    <Select
+                        label="Status"
+                        data={[
+                            { value: 'present', label: 'Present' },
+                            { value: 'absent', label: 'Absent' },
+                            { value: 'half-day', label: 'Half Day' },
+                            { value: 'late', label: 'Late' }
+                        ]}
+                        value={selectedAttendance?.status || 'present'}
+                        onChange={onStatusChange}
+                    />
+                </>
+            )}
+
+            <Textarea
+                label={actionType === 'reject' ? 'Rejection Reason' : 'Remarks'}
+                placeholder={actionType === 'reject' ? 'Enter reason for rejection...' : 'Enter remarks...'}
+                value={remarks}
+                onChange={(e) => onRemarksChange(e.currentTarget.value)}
+                minRows={3}
+                required={actionType === 'reject'}
+            />
+
+            <Group position="right" mt="md">
+                <Button variant="light" onClick={onClose}>Cancel</Button>
+                <Button
+                    color={actionType === 'reject' ? 'red' : 'blue'}
+                    onClick={onSubmit}
+                    disabled={
+                        (actionType === 'reject' && !remarks) ||
+                        ((actionType === 'mark-attendance' || actionType === 'edit') && checkOutTime < checkInTime)
+                    }
+                >
+                    {actionType === 'mark-attendance' ? 'Submit' :
+                     actionType === 'edit' ? 'Save Changes' :
+                     actionType === 'approve' ? 'Approve' : 'Reject'}
+                </Button>
+            </Group>
+        </Stack>
+    </Modal>
+);
 
 export default function Attendance() {
     const {
@@ -41,8 +350,8 @@ export default function Attendance() {
         localFilters,
         setLocalFilters,
         handleFilterChange,
-        handleCheckIn,
-        handleCheckOut,
+        handleMarkAttendance,
+        handleEditAttendance,
         handleUpdateApproval,
         handlePageChange,
         stats,
@@ -53,211 +362,113 @@ export default function Attendance() {
     const [selectedAttendance, setSelectedAttendance] = useState(null);
     const [actionType, setActionType] = useState(null);
     const [remarks, setRemarks] = useState('');
-    const [checkTime, setCheckTime] = useState(new Date());
+    const [checkInTime, setCheckInTime] = useState('');
+    const [checkOutTime, setCheckOutTime] = useState('');
 
-    // Enhanced ActionModal with better styling
-    const ActionModal = () => (
-        <Modal
-            opened={opened}
-            onClose={() => setOpened(false)}
-            title={
-                <Text size="lg" weight={600}>
-                    {actionType === 'check-in' ? 'Mark Check In' :
-                        actionType === 'check-out' ? 'Mark Check Out' :
-                            actionType === 'approve' ? 'Approve Attendance' : 'Reject Attendance'}
-                </Text>
-            }
-            radius="md"
-            padding="lg"
-            size="md"
-        >
-            <Stack>
-                {(actionType === 'check-in' || actionType === 'check-out') && (
-                    <>
-                        <TimeInput
-                            label="Time"
-                            value={checkTime}
-                            onChange={setCheckTime}
-                        />
-                        <Text size="sm" c="dimmed">
-                            Shift: {selectedAttendance?.shift?.startTime} - {selectedAttendance?.shift?.endTime}
-                        </Text>
-                    </>
-                )}
+    const handleModalClose = useCallback(() => {
+        setOpened(false);
+        setCheckInTime('');
+        setCheckOutTime('');
+        setRemarks('');
+        setSelectedAttendance(null);
+        setActionType(null);
+    }, []);
 
-                <Textarea
-                    label="Remarks"
-                    placeholder="Enter remarks..."
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.currentTarget.value)}
-                    minRows={3}
-                />
+    const handleModalSubmit = useCallback(() => {
+        if (actionType === 'mark-attendance') {
+            handleMarkAttendance({
+                employeeId: selectedAttendance.employee.id,
+                checkInTime,
+                checkOutTime,
+                status: selectedAttendance.status || 'present',
+                remarks
+            });
+        } else if (actionType === 'edit') {
+            handleEditAttendance({
+                id: selectedAttendance.id,
+                checkInTime,
+                checkOutTime,
+                status: selectedAttendance.status,
+                remarks
+            });
+        } else {
+            handleUpdateApproval({
+                id: selectedAttendance.id,
+                status: actionType === 'approve' ? 'approved' : 'rejected',
+                rejectionReason: remarks
+            });
+        }
+        handleModalClose();
+    }, [actionType, selectedAttendance, checkInTime, checkOutTime, remarks, handleMarkAttendance, handleEditAttendance, handleUpdateApproval, handleModalClose]);
 
-                <Group position="right" mt="md">
-                    <Button variant="light" onClick={() => setOpened(false)}>Cancel</Button>
-                    <Button
-                        color={actionType === 'reject' ? 'red' : 'blue'}
-                        onClick={() => {
-                            if (actionType === 'check-in') {
-                                handleCheckIn({
-                                    employeeId: selectedAttendance.employee.id,
-                                    checkInTime: checkTime,
-                                    remarks
-                                });
-                            } else if (actionType === 'check-out') {
-                                handleCheckOut({
-                                    id: selectedAttendance.id,
-                                    checkOutTime: checkTime,
-                                    remarks
-                                });
-                            } else {
-                                handleUpdateApproval({
-                                    id: selectedAttendance.id,
-                                    status: actionType === 'approve' ? 'approved' : 'rejected',
-                                    rejectionReason: remarks
-                                });
-                            }
-                            setOpened(false);
-                        }}
-                    >
-                        Confirm
-                    </Button>
-                </Group>
-            </Stack>
-        </Modal>
-    );
+    const handleEditClick = useCallback((item) => {
+        setSelectedAttendance(item);
+        setActionType('edit');
+        setCheckInTime(item.checkIn ? formatTime(item.checkIn) : '');
+        setCheckOutTime(item.checkOut ? formatTime(item.checkOut) : '');
+        setRemarks(item.remarks || '');
+        setOpened(true);
+    }, []);
+
+    const handleMarkAttendanceClick = useCallback((item) => {
+        setSelectedAttendance(item);
+        setActionType('mark-attendance');
+        setCheckInTime('');
+        setCheckOutTime('');
+        setRemarks('');
+        setOpened(true);
+    }, []);
 
     const columns = useMemo(() => [
         {
             header: 'Employee',
             accessor: 'employee',
-            render: (item) => (
-                <Text size="sm" fw={500}>{item.employee?.name}</Text>
-            )
+            width: '25%',
+            render: (item) => <EmployeeCell item={item} />
         },
         {
             header: 'Department',
             accessor: 'department',
-            render: (item) => (
-                <Text size="sm">{item.department || 'Not Assigned'}</Text>
-            )
+            width: '20%',
+            render: (item) => <DepartmentCell item={item} />
         },
         {
             header: 'Time',
             accessor: 'checkIn',
-            render: (item) => (
-                <Stack spacing={4}>
-                    <Text size="sm">
-                        In: {item.checkIn ? new Date(item.checkIn).toLocaleTimeString() : '-'}
-                    </Text>
-                    <Text size="sm">
-                        Out: {item.checkOut ? new Date(item.checkOut).toLocaleTimeString() : '-'}
-                    </Text>
-                    {item.workHours > 0 && (
-                        <Text size="xs" c="dimmed">{item.workHours.toFixed(1)} hrs</Text>
-                    )}
-                </Stack>
-            )
+            width: '30%',
+            render: (item) => <TimeCell item={item} />
         },
         {
             header: 'Status',
             accessor: 'status',
-            render: (item) => {
-                // Simplified status logic
-                let status = item.status || 'pending';
-                let color = statusColors[status];
-                let label = status;
-
-                // Only show approval status for marked attendance
-                if (status !== 'pending' && item.approvalStatus === 'rejected') {
-                    color = 'red';
-                    label = 'Rejected';
-                }
-
-                return (
-                    <Badge color={color} variant="light">
-                        {capitalizeFirstLetter(label)}
-                    </Badge>
-                );
-            }
+            width: '15%',
+            render: (item) => <StatusCell item={item} />
         },
         {
             header: 'Actions',
             accessor: 'actions',
-            render: (item) => {
-                // Only show relevant actions based on status
-                const canCheckIn = !item.checkIn;
-                const canCheckOut = item.checkIn && !item.checkOut;
-                const canApprove = item.checkIn && item.status !== 'pending' && item.approvalStatus === 'pending';
-
-                if (!canCheckIn && !canCheckOut && !canApprove) return null;
-
-                return (
-                    <Menu position="bottom-end">
-                        <Menu.Target>
-                            <ActionIcon variant="subtle">
-                                <IconDotsVertical size={16} />
-                            </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                            {canCheckIn && (
-                                <Menu.Item
-                                    onClick={() => {
-                                        setSelectedAttendance(item);
-                                        setActionType('check-in');
-                                        setCheckTime(new Date());
-                                        setRemarks('');
-                                        setOpened(true);
-                                    }}
-                                >
-                                    Mark Check In
-                                </Menu.Item>
-                            )}
-                            {canCheckOut && (
-                                <Menu.Item
-                                    onClick={() => {
-                                        setSelectedAttendance(item);
-                                        setActionType('check-out');
-                                        setCheckTime(new Date());
-                                        setRemarks('');
-                                        setOpened(true);
-                                    }}
-                                >
-                                    Mark Check Out
-                                </Menu.Item>
-                            )}
-                            {canApprove && (
-                                <>
-                                    <Menu.Item
-                                        onClick={() => {
-                                            setSelectedAttendance(item);
-                                            setActionType('approve');
-                                            setRemarks('');
-                                            setOpened(true);
-                                        }}
-                                        color="green"
-                                    >
-                                        Approve
-                                    </Menu.Item>
-                                    <Menu.Item
-                                        onClick={() => {
-                                            setSelectedAttendance(item);
-                                            setActionType('reject');
-                                            setRemarks('');
-                                            setOpened(true);
-                                        }}
-                                        color="red"
-                                    >
-                                        Reject
-                                    </Menu.Item>
-                                </>
-                            )}
-                        </Menu.Dropdown>
-                    </Menu>
-                );
-            }
+            width: '10%',
+            render: (item) => (
+                <ActionsCell 
+                    item={item}
+                    onMarkAttendance={handleMarkAttendanceClick}
+                    onEdit={handleEditClick}
+                    onApprove={(item) => {
+                        setSelectedAttendance(item);
+                        setActionType('approve');
+                        setRemarks('');
+                        setOpened(true);
+                    }}
+                    onReject={(item) => {
+                        setSelectedAttendance(item);
+                        setActionType('reject');
+                        setRemarks('');
+                        setOpened(true);
+                    }}
+                />
+            )
         }
-    ], []);
+    ], [handleMarkAttendanceClick, handleEditClick]);
 
     // Enhanced ActiveFilters component
     const ActiveFilters = () => {
@@ -301,141 +512,193 @@ export default function Attendance() {
     };
 
     return (
-        <Stack spacing="xl">
-            <StatsGrid
-                data={[
-                    {
-                        title: 'Present Today',
-                        icon: 'userCheck',
-                        value: stats?.presentCount || '0',
-                        color: 'green'
-                    },
-                    {
-                        title: 'Late Today',
-                        icon: 'clock',
-                        value: stats?.lateCount || '0',
-                        color: 'orange'
-                    },
-                    {
-                        title: 'Absent Today',
-                        icon: 'userOff',
-                        value: stats?.absentCount || '0',
-                        color: 'red'
-                    },
-                    {
-                        title: 'Pending Approvals',
-                        icon: 'clockPause',
-                        value: stats?.pendingCount || '0',
-                        color: 'blue'
-                    }
-                ]}
+        <Paper radius="md" p={{ base: 'md', sm: 'xl' }} bg="var(--mantine-color-body)">
+            <Stack spacing={{ base: 'md', sm: 'xl' }}>
+                <StatsGrid
+                    data={[
+                        {
+                            title: 'Total Employees',
+                            icon: 'users',
+                            value: attendance?.pagination?.total || '0',
+                            color: 'blue'
+                        },
+                        {
+                            title: 'Present Today',
+                            icon: 'userCheck',
+                            value: stats?.presentCount || '0',
+                            color: 'green'
+                        },
+                        {
+                            title: 'Late Today',
+                            icon: 'clock',
+                            value: stats?.lateCount || '0',
+                            color: 'yellow'
+                        },
+                        {
+                            title: 'Absent Today',
+                            icon: 'userOff',
+                            value: stats?.absentCount || '0',
+                            color: 'red'
+                        },
+                        {
+                            title: 'Not Set',
+                            icon: 'clockPause',
+                            value: (attendance?.pagination?.total - (stats?.presentCount + stats?.lateCount + stats?.absentCount)) || '0',
+                            color: 'gray'
+                        }
+                    ]}
+                />
+
+                {/* Main Content Paper */}
+                <Paper radius="md">
+                    <Stack spacing="md">
+                        {/* Filter Section */}
+                        <Paper p="md" radius="md" withBorder>
+                            <Stack spacing={{ base: 'xs', sm: 'md' }}>
+                                <Grid gutter={{ base: 'xs', sm: 'md' }}>
+                                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                                        <TextInput
+                                            icon={<IconSearch size={16} />}
+                                            label="Search Employee"
+                                            placeholder="Enter name..."
+                                            value={filters.employeeName}
+                                            onChange={(e) => handleFilterChange('employeeName', e.target.value)}
+
+                                            radius="md"
+                                        />
+                                    </Grid.Col>
+                                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                                        <Select
+                                            label="Department"
+                                            placeholder="All departments"
+                                            value={localFilters.departmentId}
+                                            onChange={(value) => setLocalFilters(prev => ({
+                                                ...prev,
+                                                departmentId: value
+                                            }))}
+                                            data={departments?.map(dept => ({
+                                                value: dept.value,
+                                                label: `${dept.label} (CL:${dept.casualLeave || 0}, SL:${dept.sickLeave || 0}, EL:${dept.earnedLeave || 0})`,
+                                            })) || []}
+                                            clearable
+                                            searchable
+                                            radius="md"
+                                        />
+                                    </Grid.Col>
+                                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                                        <Select
+                                            label="Status"
+                                            placeholder="All statuses"
+                                            value={localFilters.status}
+                                            onChange={(value) => setLocalFilters(prev => ({
+                                                ...prev,
+                                                status: value
+                                            }))}
+                                            data={[
+                                                { value: 'not set', label: 'Not Set' },
+                                                { value: 'pending', label: 'Pending' },
+                                                { value: 'present', label: 'Present' },
+                                                { value: 'absent', label: 'Absent' },
+                                                { value: 'late', label: 'Late' },
+                                                { value: 'half-day', label: 'Half Day' }
+                                            ]}
+                                            clearable
+                                            radius="md"
+                                        />
+                                    </Grid.Col>
+                                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                                        <DatePickerInput
+                                            type="range"
+                                            label="Date Range"
+                                            placeholder="Pick dates"
+                                            value={[filters.startDate, filters.endDate]}
+                                            onChange={([start, end]) => {
+                                                handleFilterChange('startDate', start);
+                                                handleFilterChange('endDate', end);
+                                            }}
+
+                                            radius="md"
+                                        />
+                                    </Grid.Col>
+                                </Grid>
+                            </Stack>
+                        </Paper>
+
+                        <ActiveFilters />
+
+                        {/* DataTable */}
+                        <Box>
+                            <DataTable
+                                title="Attendance List"
+                                data={attendance?.data || []}
+                                columns={columns}
+                                loading={loading}
+                                pagination={{
+                                    total: attendance?.pagination?.total || 0,
+                                    page: filters.page,
+                                    onChange: handlePageChange,
+                                    limit: filters.limit
+                                }}
+                                hideMonthPicker={true}
+                                hideHeader={true}
+                                hideActions={true}
+                            />
+                        </Box>
+                    </Stack>
+                </Paper>
+            </Stack>
+
+            <ActionModal 
+                opened={opened}
+                onClose={handleModalClose}
+                actionType={actionType}
+                selectedAttendance={selectedAttendance}
+                checkInTime={checkInTime}
+                checkOutTime={checkOutTime}
+                remarks={remarks}
+                onCheckInTimeChange={setCheckInTime}
+                onCheckOutTimeChange={setCheckOutTime}
+                onRemarksChange={setRemarks}
+                onStatusChange={(value) => setSelectedAttendance(prev => ({ ...prev, status: value }))}
+                onSubmit={handleModalSubmit}
             />
-
-            {/* Enhanced Main Content Paper */}
-            <Paper radius="md"
-                p={{ base: 'xs', sm: 'lg' }} sx={(theme) => ({
-                    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
-                })}>
-                <Stack spacing="lg">
-                    {/* Enhanced Search and Filter Header */}
-                    <Paper
-                        p={{ base: 'xs', sm: 'md' }}
-                        radius="md"
-                        withBorder
-                    >
-                        <Stack spacing={{ base: 'xs', sm: 'md' }}>
-                            <Grid gutter={{ base: 'xs', sm: 'md' }}>
-                                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                                    <TextInput
-                                        icon={<IconSearch size={16} />}
-                                        label="Search Employee"
-                                        placeholder="Enter name..."
-                                        value={filters.employeeName}
-                                        onChange={(e) => handleFilterChange('employeeName', e.target.value)}
-
-                                        radius="md"
-                                    />
-                                </Grid.Col>
-                                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                                    <Select
-                                        label="Department"
-                                        placeholder="All departments"
-                                        value={localFilters.departmentId}
-                                        onChange={(value) => setLocalFilters(prev => ({
-                                            ...prev,
-                                            departmentId: value
-                                        }))}
-                                        data={departments?.map(dept => ({
-                                            value: dept.value,
-                                            label: `${dept.label} (CL:${dept.casualLeave || 0}, SL:${dept.sickLeave || 0}, EL:${dept.earnedLeave || 0})`,
-                                        })) || []}
-                                        clearable
-                                        searchable
-                                        nothingFound="No departments found"
-                                        radius="md"
-                                    />
-                                </Grid.Col>
-                                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                                    <Select
-                                        label="Status"
-                                        placeholder="All statuses"
-                                        value={localFilters.status}
-                                        onChange={(value) => setLocalFilters(prev => ({
-                                            ...prev,
-                                            status: value
-                                        }))}
-                                        data={[
-                                            { value: 'present', label: 'Present' },
-                                            { value: 'absent', label: 'Absent' },
-                                            { value: 'late', label: 'Late' },
-                                        ]}
-                                        clearable
-
-                                        radius="md"
-                                    />
-                                </Grid.Col>
-                                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                                    <DatePickerInput
-                                        type="range"
-                                        label="Date Range"
-                                        placeholder="Pick dates"
-                                        value={[filters.startDate, filters.endDate]}
-                                        onChange={([start, end]) => {
-                                            handleFilterChange('startDate', start);
-                                            handleFilterChange('endDate', end);
-                                        }}
-                                        clearable={false}
-
-                                        radius="md"
-                                    />
-                                </Grid.Col>
-                            </Grid>
-                        </Stack>
-                    </Paper>
-
-                    <ActiveFilters />
-
-                    {/* Enhanced DataTable */}
-                    <Box sx={{ overflow: 'hidden' }}>
-                        <DataTable
-                            title="Attendance List"
-                            data={attendance?.data || []}
-                            columns={columns}
-                            loading={loading}
-                            pagination={{
-                                total: attendance?.pagination?.total || 0,
-                                page: filters.page,
-                                onChange: handlePageChange,
-                                limit: filters.limit
-                            }}
-                            hideMonthPicker={true}
-                            hideHeader={true}
-                        />
-                    </Box>
-                </Stack>
-            </Paper>
-
-            <ActionModal />
-        </Stack>
+        </Paper>
     );
-} 
+}
+
+StatsGrid.propTypes = {
+    data: PropTypes.arrayOf(PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        icon: PropTypes.string.isRequired,
+        value: PropTypes.string.isRequired,
+        color: PropTypes.string.isRequired
+    })).isRequired
+};
+
+DataTable.propTypes = {
+    title: PropTypes.string,
+    data: PropTypes.array.isRequired,
+    columns: PropTypes.arrayOf(PropTypes.shape({
+        header: PropTypes.string.isRequired,
+        accessor: PropTypes.string.isRequired,
+        width: PropTypes.string,
+        render: PropTypes.func
+    })).isRequired,
+    loading: PropTypes.bool,
+    pagination: PropTypes.shape({
+        total: PropTypes.number.isRequired,
+        page: PropTypes.number.isRequired,
+        onChange: PropTypes.func.isRequired,
+        limit: PropTypes.number.isRequired
+    }),
+    hideMonthPicker: PropTypes.bool,
+    hideHeader: PropTypes.bool,
+    hideActions: PropTypes.bool
+};
+
+DataTable.defaultProps = {
+    loading: false,
+    hideMonthPicker: false,
+    hideHeader: false,
+    hideActions: false
+}; 

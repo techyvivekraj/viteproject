@@ -3,7 +3,9 @@ import {
     fetchAttendance, 
     markCheckIn, 
     markCheckOut, 
-    updateAttendanceApproval 
+    updateAttendanceApproval,
+    editAttendance,
+    markAttendance
 } from '../actions/attendance';
 
 const initialState = {
@@ -120,6 +122,45 @@ const attendanceSlice = createSlice({
             .addCase(updateAttendanceApproval.rejected, (state, action) => {
                 state.approvalStatus = 'failed';
                 state.approvalError = action.payload;
+            })
+
+            // Edit Attendance
+            .addCase(editAttendance.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(editAttendance.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                if (state.attendance?.data) {
+                    const index = state.attendance.data.findIndex(
+                        item => item.id === action.payload.data.id
+                    );
+                    if (index !== -1) {
+                        state.attendance.data[index] = action.payload.data;
+                    }
+                }
+            })
+            .addCase(editAttendance.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            // Mark Attendance
+            .addCase(markAttendance.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(markAttendance.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                if (state.attendance?.data) {
+                    state.attendance.data.unshift(action.payload.data);
+                }
+            })
+            .addCase(markAttendance.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     }
 });

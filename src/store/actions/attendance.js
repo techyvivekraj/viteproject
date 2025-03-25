@@ -2,7 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { axiosInstance } from '../../components/api';
 
 // Fetch Attendance List
-export const fetchAttendance = createAsyncThunk(
+const fetchAttendance = createAsyncThunk(
     'attendance/fetchAttendance',
     async ({ organizationId, filters = {} }, { rejectWithValue }) => {
         try {
@@ -40,7 +40,7 @@ export const fetchAttendance = createAsyncThunk(
 );
 
 // Mark Check-in
-export const markCheckIn = createAsyncThunk(
+const markCheckIn = createAsyncThunk(
     'attendance/markCheckIn',
     async (data, { rejectWithValue }) => {
         try {
@@ -60,7 +60,7 @@ export const markCheckIn = createAsyncThunk(
 );
 
 // Mark Check-out
-export const markCheckOut = createAsyncThunk(
+const markCheckOut = createAsyncThunk(
     'attendance/markCheckOut',
     async ({ id, ...data }, { rejectWithValue }) => {
         try {
@@ -79,7 +79,7 @@ export const markCheckOut = createAsyncThunk(
 );
 
 // Update Attendance Approval Status
-export const updateAttendanceApproval = createAsyncThunk(
+const updateAttendanceApproval = createAsyncThunk(
     'attendance/updateApproval',
     async ({ id, status, rejectionReason }, { rejectWithValue }) => {
         try {
@@ -92,4 +92,63 @@ export const updateAttendanceApproval = createAsyncThunk(
             return rejectWithValue(error.response?.data || 'Failed to update attendance status');
         }
     }
-); 
+);
+
+// Add this new action for editing attendance
+const editAttendance = createAsyncThunk(
+    'attendance/editAttendance',
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put(`/attendance/${data.id}`, {
+                checkInTime: data.checkInTime,
+                checkOutTime: data.checkOutTime,
+                status: data.status,
+                remarks: data.remarks
+            });
+            
+            if (!response.data || !response.data.data) {
+                throw new Error('Invalid response format');
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('Edit attendance error:', error);
+            return rejectWithValue(error.response?.data || 'Failed to edit attendance');
+        }
+    }
+);
+
+// Add this new action for marking attendance
+const markAttendance = createAsyncThunk(
+    'attendance/markAttendance',
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post('/attendance', {
+                employeeId: data.employeeId,
+                checkInTime: data.checkInTime,
+                checkOutTime: data.checkOutTime,
+                status: data.status,
+                remarks: data.remarks
+            });
+            
+            if (!response.data || !response.data.data) {
+                throw new Error('Invalid response format');
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('Mark attendance error:', error);
+            return rejectWithValue(error.response?.data || 'Failed to mark attendance');
+        }
+    }
+);
+
+// Single export statement for all actions
+export {
+    fetchAttendance,
+    markCheckIn,
+    markCheckOut,
+    updateAttendanceApproval,
+    editAttendance,
+    markAttendance
+}; 

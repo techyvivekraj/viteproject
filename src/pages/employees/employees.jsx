@@ -90,18 +90,18 @@ export default function Employees() {
     }, [navigate]);
 
     return (
-        <Paper radius="md" p="lg" bg="var(--mantine-color-body)">
-            <DataTable
-                title="Employee List"
-                data={employees?.data || []}
-                columns={columns}
-                searchPlaceholder="Search employees..."
-                pagination={true}
-                onAddClick={handleAddClick}
-                onEditClick={handleEditClick}
-                onDeleteClick={handleDeleteClick}
-                isLoading={loading}
-            />
+        <Paper radius="md" p={{ base: 'md', sm: 'xl' }} bg="var(--mantine-color-body)">
+                <DataTable
+                    title="Employee List"
+                    data={employees?.data || []}
+                    columns={columns}
+                    searchPlaceholder="Search employees..."
+                    pagination={true}
+                    onAddClick={handleAddClick}
+                    onEditClick={handleEditClick}
+                    onDeleteClick={handleDeleteClick}
+                    isLoading={loading}
+                />
         </Paper>
     );
 } 

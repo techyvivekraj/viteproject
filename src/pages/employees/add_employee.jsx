@@ -72,11 +72,10 @@ export default function AddEmployee() {
     const prevStep = () => setActive((current) => (current > 0 ? current - 1 : current));
 
     return (
-
-        <Paper radius="md" p="lg" bg="var(--mantine-color-body)">
-            <Stack spacing={{ base: 'sm', md: 'md' }}>
-                <Group position="apart" mb="xl" wrap="wrap">
-                    <Stack spacing="xs">
+        <Paper radius="md" p={{ base: 'md', sm: 'xl' }} bg="var(--mantine-color-body)">
+            <Stack spacing={{ base: 'md', sm: 'xl' }}>
+                <Group position="apart" mb="md" wrap="wrap">
+                    <Stack spacing={0}>
                         <Title order={2} size={isMobile ? 'h4' : isTablet ? 'h3' : 'h2'}>
                             Add New Employee
                         </Title>
@@ -108,7 +107,7 @@ export default function AddEmployee() {
                 </Group>
 
                 {errors.general && (
-                    <Card withBorder p="sm" mb="md" bg="red.0" radius="md">
+                    <Card withBorder p="md" bg="red.0" radius="md">
                         <Group>
                             <IconInfoCircle size={isMobile ? 16 : 20} color="red" />
                             <Text color="red" size={isMobile ? 'xs' : 'sm'}>
@@ -132,9 +131,9 @@ export default function AddEmployee() {
                 </Stepper>
 
                 <form id="employee-form" onSubmit={onSubmit}>
-                    <Stack spacing={{ base: 'md', md: 'xl' }}>
+                    <Stack spacing={{ base: 'md', sm: 'xl' }}>
                         {active === 0 && (
-                            <Card withBorder p={{ base: 'sm', md: 'md' }} radius="md" shadow="sm">
+                            <Paper withBorder p="md" radius="md">
                                 <Group position="apart" mb="md" wrap="wrap">
                                     <Title order={3} size={isMobile ? 'h5' : isTablet ? 'h4' : 'h3'}>
                                         Basic Information
@@ -200,7 +199,6 @@ export default function AddEmployee() {
                                             onChange={(date) => handleChange('joiningDate', date)}
                                             required
                                             error={errors.joiningDate}
-                                            clearable={false}
                                             valueFormat="DD/MM/YYYY"
                                             minDate={new Date(2000, 0, 1)}
                                             maxDate={new Date(2100, 0, 1)}
@@ -296,11 +294,11 @@ export default function AddEmployee() {
                                         />
                                     </Grid.Col>
                                 </Grid>
-                            </Card>
+                            </Paper>
                         )}
 
                         {active === 1 && (
-                            <Card withBorder p={{ base: 'sm', md: 'md' }} radius="md" shadow="sm">
+                            <Paper withBorder p="md" radius="md">
                                 <Group position="apart" mb="md" wrap="wrap">
                                     <Title order={3} size={isMobile ? 'h5' : isTablet ? 'h4' : 'h3'}>
                                         Additional Information
@@ -482,11 +480,11 @@ export default function AddEmployee() {
                                         />
                                     </Grid.Col>
                                 </Grid>
-                            </Card>
+                            </Paper>
                         )}
 
                         {active === 2 && (
-                            <Card withBorder p={{ base: 'sm', md: 'md' }} radius="md" shadow="sm">
+                            <Paper withBorder p="md" radius="md">
                                 <Group position="apart" mb="md" wrap="wrap">
                                     <Title order={3} size={isMobile ? 'h5' : isTablet ? 'h4' : 'h3'}>
                                         Bank Details
@@ -541,11 +539,11 @@ export default function AddEmployee() {
                                         />
                                     </Grid.Col>
                                 </Grid>
-                            </Card>
+                            </Paper>
                         )}
 
                         {active === 3 && (
-                            <Card withBorder p={{ base: 'sm', md: 'md' }} radius="md" shadow="sm">
+                            <Paper withBorder p="md" radius="md">
                                 <Group position="apart" mb="md" wrap="wrap">
                                     <Title order={3} size={isMobile ? 'h5' : isTablet ? 'h4' : 'h3'}>
                                         Documents
@@ -651,7 +649,7 @@ export default function AddEmployee() {
                                         />
                                     </Grid.Col>
                                 </Grid>
-                            </Card>
+                            </Paper>
                         )}
 
                         <Group position="apart" mt="xl" wrap="wrap" spacing="xs">
