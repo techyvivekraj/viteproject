@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import {
     ActionIcon,
     Box,
@@ -46,6 +47,7 @@ const DataTable = ({
     onMonthClear,
     monthPickerPlaceholder,
     hideMonthPicker,
+    hideHeader = false,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
@@ -148,36 +150,41 @@ const DataTable = ({
 
     return (
         <Box>
+            {/* Always show title, but conditionally show other header elements */}
             <Group position="apart" mb="md">
                 <Text size="lg" weight={500} style={{ marginRight: 'auto' }}>
                     {title}
                 </Text>
-                <Group>
-                    <Button variant="light" onClick={onAddClick} leftSection={<IconPlus size={14} />}>
-                        Add
-                    </Button>
-                    {
-                        hideMonthPicker ? <div></div> : <MonthPickerInput
-                            placeholder={monthPickerPlaceholder ?? "Pick a month"}
-                            value={selectedMonth}
-                            onChange={handleMonthChange}
-                            style={{ minWidth: '150px' }}
-                            clearButtonProps={{
-                                'aria-label': 'Clear month selection',
-                                onClick: handleMonthClear,
-                            }}
-                            clearable
+                {!hideHeader && (
+                    <>
+                        <Group>
+                            <Button variant="light" onClick={onAddClick} leftSection={<IconPlus size={14} />}>
+                                Add
+                            </Button>
+                            {!hideMonthPicker && (
+                                <MonthPickerInput
+                                    placeholder={monthPickerPlaceholder ?? "Pick a month"}
+                                    value={selectedMonth}
+                                    onChange={handleMonthChange}
+                                    style={{ minWidth: '150px' }}
+                                    clearButtonProps={{
+                                        'aria-label': 'Clear month selection',
+                                        onClick: handleMonthClear,
+                                    }}
+                                    clearable
+                                />
+                            )}
+                        </Group>
+                        <TextInput
+                            placeholder={searchPlaceholder || 'Search...'}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.currentTarget.value)}
                         />
-                    }
-
-                </Group>
-                <TextInput
-                    placeholder={searchPlaceholder || 'Search...'}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.currentTarget.value)}
-                />
+                    </>
+                )}
             </Group>
-            <Divider variant="dashed" my="md" />
+            {!hideHeader && <Divider variant="dashed" my="md" />}
+            
             <Table.ScrollContainer minWidth={800}>
                 {isLoading ? (
                     <Box style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '20px' }}>
@@ -221,6 +228,46 @@ const DataTable = ({
             )}
         </Box>
     );
+};
+
+// Add PropTypes validation after the component
+DataTable.propTypes = {
+    title: PropTypes.string,
+    data: PropTypes.array,
+    columns: PropTypes.arrayOf(
+        PropTypes.shape({
+            header: PropTypes.string.isRequired,
+            accessor: PropTypes.string.isRequired,
+            render: PropTypes.func,
+            sortBy: PropTypes.func
+        })
+    ).isRequired,
+    onAddClick: PropTypes.func,
+    onEditClick: PropTypes.func,
+    onViewClick: PropTypes.func,
+    onDeleteClick: PropTypes.func,
+    searchPlaceholder: PropTypes.string,
+    isLoading: PropTypes.bool,
+    onMonthChange: PropTypes.func,
+    onMonthClear: PropTypes.func,
+    monthPickerPlaceholder: PropTypes.string,
+    hideMonthPicker: PropTypes.bool,
+    hideHeader: PropTypes.bool,
+    pagination: PropTypes.shape({
+        total: PropTypes.number,
+        page: PropTypes.number,
+        onChange: PropTypes.func,
+        limit: PropTypes.number
+    })
+};
+
+// Add default props
+DataTable.defaultProps = {
+    data: [],
+    hideHeader: false,
+    hideMonthPicker: false,
+    isLoading: false,
+    title: ''
 };
 
 export default DataTable;

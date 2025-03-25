@@ -1,4 +1,5 @@
 import { Grid, SimpleGrid } from '@mantine/core';
+import StatsGrid from '../../components/StatsGrid/StatsGrid';
 // import PayrollSummary from './components/PayrollSummary/PayrollSummary';
 // import EmployeeStats from './components/EmployeeStats/EmployeeStats';
 // import RecentActivities from './components/RecentActivities/RecentActivities';
@@ -7,7 +8,6 @@ import { Grid, SimpleGrid } from '@mantine/core';
 // import TaskManagement from './components/TaskManagement/TaskManagement';
 // import RecruitmentPipeline from './components/RecruitmentPipeline/RecruitmentPipeline';
 // import QuickConnect from './components/QuickConnect/QuickConnect';
-import StatsGrid from './components/StatsGrid/StatsGrid';
 
 const Dashboard = () => {
   return (

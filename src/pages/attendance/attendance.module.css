@@ -1,0 +1,16 @@
+.title {
+    font-family: 'Greycliff CF', var(--mantine-font-family);
+    font-size: var(--mantine-font-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.value {
+    font-size: rem(28px);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.icon {
+    color: var(--mantine-color-gray-4);
+} 
