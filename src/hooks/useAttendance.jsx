@@ -11,10 +11,13 @@ import {
     fetchAttendance,
     markCheckIn,
     markCheckOut,
-    updateAttendanceApproval
+    updateAttendanceApproval,
+    editAttendance
 } from '../store/actions/attendance';
 import { showError, showToast } from '../components/api';
 import { useDebouncedValue } from '@mantine/hooks';
+import { selectDepartments } from '../store/slices/employeeSlice';
+import { fetchDepartments } from '../store/actions/employee';
 
 export const useAttendance = () => {
     const dispatch = useDispatch();
@@ -60,29 +63,41 @@ export const useAttendance = () => {
         status: ''
     });
 
-    // Add to existing state
-    const [departments, setDepartments] = useState([]);
+    // Replace the departments state with selector
+    const departments = useSelector(selectDepartments);
+    const [isLoadingDepartments, setIsLoadingDepartments] = useState(true);
 
-    // Add fetch function
-    const fetchDepartments = useCallback(async () => {
-        try {
-            const response = await fetch(`/api/departments?organizationId=${organizationId}`);
-            const data = await response.json();
-            // Transform the data to include both id and name as required
-            setDepartments(data.map(dept => ({
-                value: dept.id,
-                label: dept.name,
-                casualLeave: dept.casualLeave,
-                sickLeave: dept.sickLeave,
-                earnedLeave: dept.earnedLeave,
-                maternityLeave: dept.maternityLeave,
-                paternityLeave: dept.paternityLeave,
-                noticePeriod: dept.noticePeriod
-            })));
-        } catch (error) {
-            console.error('Failed to fetch departments:', error);
-        }
-    }, [organizationId]);
+    // Remove the old fetchDepartments function and update the useEffect
+    useEffect(() => {
+        const loadDepartments = async () => {
+            if (!organizationId) return;
+
+            try {
+                setIsLoadingDepartments(true);
+                dispatch(fetchDepartments(organizationId));
+            } catch (error) {
+                console.error('Error loading departments:', error);
+                showError('Failed to load departments');
+            } finally {
+                setIsLoadingDepartments(false);
+            }
+        };
+
+        loadDepartments();
+    }, [dispatch, organizationId]);
+
+    // Transform departments data for dropdowns (modify this)
+    const departmentList = useMemo(() => {
+        const deptList = departments?.data?.map(dept => ({
+            value: String(dept.id),
+            label: dept.name
+        })) || [];
+
+        return [
+            { value: '', label: 'All Departments' },
+            ...deptList
+        ];
+    }, [departments?.data]);
 
     // Effect to fetch data when debounced filters change
     useEffect(() => {
@@ -100,37 +115,43 @@ export const useAttendance = () => {
                 }));
             }
         }
-    }, [dispatch, organizationId, debouncedFilters]);
-
-    // Add to useEffect
-    useEffect(() => {
-        if (organizationId) {
-            fetchDepartments();
-        }
-    }, [organizationId, fetchDepartments]);
+    }, [dispatch, organizationId, debouncedFilters, filters.startDate, filters.endDate, filters.employeeName, filters.page]);
 
     // Filter data locally for department and status
     const filteredData = useMemo(() => {
-        if (!attendance?.data) return [];
+        if (!attendance?.data?.length) return [];
+        
+        if (!localFilters.departmentId && !localFilters.status) {
+            return attendance.data;
+        }
         
         return attendance.data.filter(item => {
             const matchesDepartment = !localFilters.departmentId || 
-                item.department === localFilters.departmentId;
+                String(item.department?.id) === localFilters.departmentId;
             const matchesStatus = !localFilters.status || 
                 item.status === localFilters.status;
             
             return matchesDepartment && matchesStatus;
         });
-    }, [attendance?.data, localFilters]);
+    }, [attendance?.data, localFilters.departmentId, localFilters.status]);
 
     // Calculate stats whenever attendance data changes
     useEffect(() => {
-        if (attendance?.data) {
-            // Format dates to compare
+        if (!attendance?.data?.length) {
+            setStats({
+                presentCount: 0,
+                lateCount: 0,
+                absentCount: 0,
+                pendingCount: 0,
+                notSetCount: 0
+            });
+            return;
+        }
+
+        try {
             const startDate = filters.startDate?.toISOString().split('T')[0];
             const endDate = filters.endDate?.toISOString().split('T')[0];
             
-            // Filter records within selected date range
             const dateRangeRecords = attendance.data.filter(record => {
                 const recordDate = new Date(record.date).toISOString().split('T')[0];
                 return recordDate >= startDate && recordDate <= endDate;
@@ -141,19 +162,27 @@ export const useAttendance = () => {
             const absent = dateRangeRecords.filter(r => r.status === 'absent').length;
             const pending = dateRangeRecords.filter(r => r.approvalStatus === 'pending').length;
             
-            // Calculate not set as total employees minus sum of other statuses
             const totalEmployees = attendance.pagination?.total || 0;
-            const notSet = totalEmployees - (present + late + absent);
+            const notSet = Math.max(0, totalEmployees - (present + late + absent));
 
             setStats({
                 presentCount: present,
                 lateCount: late,
                 absentCount: absent,
                 pendingCount: pending,
-                notSetCount: notSet > 0 ? notSet : 0 // Ensure it doesn't go negative
+                notSetCount: notSet
+            });
+        } catch (error) {
+            console.error('Error calculating attendance stats:', error);
+            setStats({
+                presentCount: 0,
+                lateCount: 0,
+                absentCount: 0,
+                pendingCount: 0,
+                notSetCount: 0
             });
         }
-    }, [attendance, filters.startDate, filters.endDate]);
+    }, [attendance?.data, filters.startDate, filters.endDate, attendance.pagination?.total]);
 
     const handleCheckIn = useCallback(async (data) => {
         try {
@@ -183,6 +212,20 @@ export const useAttendance = () => {
         }
     }, [dispatch, organizationId, filters]);
 
+    const handleEditAttendance = async (data) => {
+        try {
+            await dispatch(editAttendance({
+                ...data,
+                organizationId
+            })).unwrap();
+            showToast('Attendance updated successfully', 'success');
+            // Refresh attendance list
+            dispatch(fetchAttendance({ organizationId, filters }));
+        } catch (error) {
+            showError(error.message || 'Failed to update attendance');
+        }
+    };
+
     const handleUpdateApproval = useCallback(async (data) => {
         try {
             await dispatch(updateAttendanceApproval({
@@ -210,19 +253,25 @@ export const useAttendance = () => {
         }));
     }, []);
 
-    // Update the useEffect for data fetching
+    // Simplified useEffect for data fetching
     useEffect(() => {
         if (organizationId) {
             dispatch(fetchAttendance({ 
                 organizationId, 
                 filters: {
-                    ...filters,
+                    ...debouncedFilters,
                     departmentId: localFilters.departmentId,
                     status: localFilters.status
                 }
             }));
         }
-    }, [dispatch, organizationId, filters, localFilters]);
+    }, [dispatch, organizationId, debouncedFilters, localFilters]);
+
+    // Add this temporarily to debug
+    useEffect(() => {
+        console.log('Attendance data:', attendance?.data);
+        console.log('Local filters:', localFilters);
+    }, [attendance?.data, localFilters]);
 
     return {
         attendance: { ...attendance, data: filteredData },
@@ -235,10 +284,12 @@ export const useAttendance = () => {
         setLocalFilters,
         handleCheckIn,
         handleCheckOut,
+        handleEditAttendance,
         handleUpdateApproval,
         handlePageChange,
         handleFilterChange,
         stats,
-        departments
+        departments: departmentList,
+        isLoadingDepartments
     };
 }; 

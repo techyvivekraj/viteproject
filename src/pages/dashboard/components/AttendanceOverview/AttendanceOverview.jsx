@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Paper, Title, Text, Group, SimpleGrid } from '@mantine/core';
 import { IconUserCheck, IconUserExclamation, IconUserOff } from '@tabler/icons-react';
 import { LineChart } from '@mantine/charts';
-import { useAttendance } from '../../../../hooks/useAttendance';
+import { useAttendance } from '../../../../hooks/useAttendance.jsx';
 import classes from './AttendanceOverview.module.css';
 
 export default function AttendanceOverview() {

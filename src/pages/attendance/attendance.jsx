@@ -18,7 +18,7 @@ import {
 import { DatePickerInput, TimeInput } from '@mantine/dates';
 import { IconDotsVertical, IconSearch, IconClock, IconEdit, IconUserCheck, IconAlertCircle, IconCalendarTime } from '@tabler/icons-react';
 import DataTable from '../../components/DataTable/datatable';
-import { useAttendance } from '../../hooks/useAttendance';
+import { useAttendance } from '../../hooks/useAttendance.jsx';
 import StatsGrid from '../../components/StatsGrid/StatsGrid';
 import PropTypes from 'prop-types';
 
@@ -342,6 +342,43 @@ const ActionModal = ({
     </Modal>
 );
 
+ActionModal.propTypes = {
+    opened: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    actionType: PropTypes.oneOf(['mark-attendance', 'edit', 'approve', 'reject']),
+    selectedAttendance: PropTypes.shape({
+        id: PropTypes.string,
+        status: PropTypes.string,
+        checkIn: PropTypes.string,
+        checkOut: PropTypes.string,
+        remarks: PropTypes.string,
+        shift: PropTypes.shape({
+            startTime: PropTypes.string,
+            endTime: PropTypes.string
+        }),
+        employee: PropTypes.shape({
+            id: PropTypes.string,
+            name: PropTypes.string
+        })
+    }),
+    checkInTime: PropTypes.string,
+    checkOutTime: PropTypes.string,
+    remarks: PropTypes.string,
+    onCheckInTimeChange: PropTypes.func.isRequired,
+    onCheckOutTimeChange: PropTypes.func.isRequired,
+    onRemarksChange: PropTypes.func.isRequired,
+    onStatusChange: PropTypes.func.isRequired,
+    onSubmit: PropTypes.func.isRequired
+};
+
+ActionModal.defaultProps = {
+    actionType: null,
+    selectedAttendance: null,
+    checkInTime: '',
+    checkOutTime: '',
+    remarks: ''
+};
+
 export default function Attendance() {
     const {
         attendance,
@@ -576,10 +613,7 @@ export default function Attendance() {
                                                 ...prev,
                                                 departmentId: value
                                             }))}
-                                            data={departments?.map(dept => ({
-                                                value: dept.value,
-                                                label: `${dept.label} (CL:${dept.casualLeave || 0}, SL:${dept.sickLeave || 0}, EL:${dept.earnedLeave || 0})`,
-                                            })) || []}
+                                            data={departments || []}
                                             clearable
                                             searchable
                                             radius="md"
