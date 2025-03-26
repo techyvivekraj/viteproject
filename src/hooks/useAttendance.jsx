@@ -9,12 +9,11 @@ import {
 } from '../store/slices/attendanceSlice';
 import { 
     fetchAttendance,
-    markCheckIn,
-    markCheckOut,
-    updateAttendanceApproval,
-    editAttendance
+    markAttendance,
+    editAttendance,
+    updateAttendanceApproval
 } from '../store/actions/attendance';
-import { showError, showToast } from '../components/api';
+import { showNotification } from '@mantine/notifications';
 import { useDebouncedValue } from '@mantine/hooks';
 import { selectDepartments } from '../store/slices/employeeSlice';
 import { fetchDepartments } from '../store/actions/employee';
@@ -77,7 +76,11 @@ export const useAttendance = () => {
                 dispatch(fetchDepartments(organizationId));
             } catch (error) {
                 console.error('Error loading departments:', error);
-                showError('Failed to load departments');
+                showNotification({
+                    title: 'Error',
+                    message: 'Failed to load departments',
+                    color: 'red'
+                });
             } finally {
                 setIsLoadingDepartments(false);
             }
@@ -184,88 +187,90 @@ export const useAttendance = () => {
         }
     }, [attendance?.data, filters.startDate, filters.endDate, attendance.pagination?.total]);
 
-    const handleCheckIn = useCallback(async (data) => {
+    // Handle mark attendance
+    const handleMarkAttendance = useCallback(async (data) => {
         try {
-            await dispatch(markCheckIn({
-                ...data,
-                organizationId
-            })).unwrap();
-            showToast('Check-in marked successfully', 'success');
+            await dispatch(markAttendance(data)).unwrap();
+            showNotification({
+                title: 'Success',
+                message: 'Attendance marked successfully',
+                color: 'green'
+            });
             // Refresh attendance list
-            dispatch(fetchAttendance({ organizationId, filters }));
+            dispatch(fetchAttendance({ 
+                ...filters, 
+                ...localFilters 
+            }));
         } catch (error) {
-            showError(error.message || 'Failed to mark check-in');
+            showNotification({
+                title: 'Error',
+                message: error.message || 'Failed to mark attendance',
+                color: 'red'
+            });
         }
-    }, [dispatch, organizationId, filters]);
+    }, [dispatch, filters, localFilters]);
 
-    const handleCheckOut = useCallback(async (data) => {
+    // Handle edit attendance
+    const handleEditAttendance = useCallback(async (data) => {
         try {
-            await dispatch(markCheckOut({
-                ...data,
-                organizationId
-            })).unwrap();
-            showToast('Check-out marked successfully', 'success');
-            // Refresh attendance list
-            dispatch(fetchAttendance({ organizationId, filters }));
+            await dispatch(editAttendance(data)).unwrap();
+            showNotification({
+                title: 'Success',
+                message: 'Attendance updated successfully',
+                color: 'green'
+            });
+            dispatch(fetchAttendance({ 
+                ...filters, 
+                ...localFilters 
+            }));
         } catch (error) {
-            showError(error.message || 'Failed to mark check-out');
+            showNotification({
+                title: 'Error',
+                message: error.message || 'Failed to update attendance',
+                color: 'red'
+            });
         }
-    }, [dispatch, organizationId, filters]);
+    }, [dispatch, filters, localFilters]);
 
-    const handleEditAttendance = async (data) => {
-        try {
-            await dispatch(editAttendance({
-                ...data,
-                organizationId
-            })).unwrap();
-            showToast('Attendance updated successfully', 'success');
-            // Refresh attendance list
-            dispatch(fetchAttendance({ organizationId, filters }));
-        } catch (error) {
-            showError(error.message || 'Failed to update attendance');
-        }
-    };
-
+    // Handle update approval
     const handleUpdateApproval = useCallback(async (data) => {
         try {
-            await dispatch(updateAttendanceApproval({
-                ...data,
-                organizationId
-            })).unwrap();
-            showToast('Attendance status updated successfully', 'success');
-            // Refresh attendance list
-            dispatch(fetchAttendance({ organizationId, filters }));
+            await dispatch(updateAttendanceApproval(data)).unwrap();
+            showNotification({
+                title: 'Success',
+                message: `Attendance ${data.status} successfully`,
+                color: 'green'
+            });
+            dispatch(fetchAttendance({ 
+                ...filters, 
+                ...localFilters 
+            }));
         } catch (error) {
-            showError(error.message || 'Failed to update attendance status');
+            showNotification({
+                title: 'Error',
+                message: error.message || 'Failed to update approval status',
+                color: 'red'
+            });
         }
-    }, [dispatch, organizationId, filters]);
+    }, [dispatch, filters, localFilters]);
 
+    // Handle filter changes
+    const handleFilterChange = useCallback((key, value) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+    }, []);
+
+    // Handle page changes
     const handlePageChange = useCallback((page) => {
         setFilters(prev => ({ ...prev, page }));
     }, []);
 
-    const handleFilterChange = useCallback((key, value) => {
-        console.log('Filter changing:', key, value); // Debug log
-        setFilters(prev => ({ 
-            ...prev, 
-            [key]: value,
-            page: key !== 'page' ? 1 : value
-        }));
-    }, []);
-
-    // Simplified useEffect for data fetching
+    // Load attendance data when filters change
     useEffect(() => {
-        if (organizationId) {
-            dispatch(fetchAttendance({ 
-                organizationId, 
-                filters: {
-                    ...debouncedFilters,
-                    departmentId: localFilters.departmentId,
-                    status: localFilters.status
-                }
-            }));
-        }
-    }, [dispatch, organizationId, debouncedFilters, localFilters]);
+        dispatch(fetchAttendance({ 
+            ...filters, 
+            ...localFilters 
+        }));
+    }, [dispatch, filters, localFilters]);
 
     // Add this temporarily to debug
     useEffect(() => {
@@ -282,12 +287,11 @@ export const useAttendance = () => {
         filters,
         localFilters,
         setLocalFilters,
-        handleCheckIn,
-        handleCheckOut,
+        handleFilterChange,
+        handleMarkAttendance,
         handleEditAttendance,
         handleUpdateApproval,
         handlePageChange,
-        handleFilterChange,
         stats,
         departments: departmentList,
         isLoadingDepartments

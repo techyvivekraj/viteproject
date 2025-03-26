@@ -415,16 +415,17 @@ export default function Attendance() {
         if (actionType === 'mark-attendance') {
             handleMarkAttendance({
                 employeeId: selectedAttendance.employee.id,
-                checkInTime,
-                checkOutTime,
+                date: new Date().toISOString().split('T')[0],
+                checkInTime: checkInTime ? `${new Date().toISOString().split('T')[0]}T${checkInTime}` : null,
+                checkOutTime: checkOutTime ? `${new Date().toISOString().split('T')[0]}T${checkOutTime}` : null,
                 status: selectedAttendance.status || 'present',
                 remarks
             });
         } else if (actionType === 'edit') {
             handleEditAttendance({
                 id: selectedAttendance.id,
-                checkInTime,
-                checkOutTime,
+                checkInTime: checkInTime ? `${new Date(selectedAttendance.date).toISOString().split('T')[0]}T${checkInTime}` : null,
+                checkOutTime: checkOutTime ? `${new Date(selectedAttendance.date).toISOString().split('T')[0]}T${checkOutTime}` : null,
                 status: selectedAttendance.status,
                 remarks
             });

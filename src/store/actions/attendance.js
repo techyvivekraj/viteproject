@@ -118,13 +118,14 @@ const editAttendance = createAsyncThunk(
     }
 );
 
-// Add this new action for marking attendance
+// Mark Attendance
 const markAttendance = createAsyncThunk(
     'attendance/markAttendance',
     async (data, { rejectWithValue }) => {
         try {
             const response = await axiosInstance.post('/attendance', {
                 employeeId: data.employeeId,
+                date: data.date,
                 checkInTime: data.checkInTime,
                 checkOutTime: data.checkOutTime,
                 status: data.status,
