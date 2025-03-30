@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { ActionIcon, AppShell, Burger, Group } from '@mantine/core';
+import { ActionIcon, AppShell, Burger, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { MantineLogo } from '@mantinex/mantine-logo';
 import { IconMenu2, IconLogout, IconMoonFilled } from '@tabler/icons-react';
@@ -67,7 +67,8 @@ const Layout = () => {
                         <IconMenu2 style={{ width: 18, height: 18 }} />
                     </ActionIcon>
                     <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
-                    <MantineLogo size={30} />
+                    {/* <MantineLogo size={30} /> */}
+                    <Text fw={700} fz={24} c={'#000'}>MicroPlesk</Text>
                 </Group>
 
                 <Group h="100%" px="md">
