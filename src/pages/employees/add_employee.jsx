@@ -18,9 +18,10 @@ import {
     ActionIcon,
     Stepper,
     useMantineTheme,
+    MultiSelect,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { IconLoader, IconInfoCircle, IconUpload, IconUser, IconFileText, IconAddressBook, IconBuildingBank } from '@tabler/icons-react';
+import { IconLoader, IconInfoCircle, IconUpload, IconUser, IconFileText, IconAddressBook, IconBuildingBank, IconX } from '@tabler/icons-react';
 import { useAddEmployee } from '../../hooks/useAddEmployee';
 import { modals } from '@mantine/modals';
 import { useState } from 'react';
@@ -217,51 +218,40 @@ export default function AddEmployee() {
                                         <Select
                                             label="Department"
                                             placeholder="Select department"
-                                            data={
-                                                departmentList.length > 0
-                                                    ? departmentList
-                                                    : [{ value: '', label: 'Loading departments...' }]
-                                            }
+                                            data={departmentList}
                                             value={formValues.departmentId}
                                             onChange={(value) => handleChange('departmentId', value)}
                                             required
                                             error={errors.departmentId}
-
                                             radius="md"
+                                            clearable
                                         />
                                     </Grid.Col>
                                     <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                                         <Select
                                             label="Designation"
                                             placeholder="Enter designation"
-                                            data={
-                                                designationList.length > 0
-                                                    ? designationList
-                                                    : [{ value: '', label: 'Loading designation...' }]
-                                            }
+                                            data={designationList}
                                             value={formValues.designationId}
                                             onChange={(value) => handleChange('designationId', value)}
                                             required
                                             error={errors.designationId}
-
                                             radius="md"
+                                            clearable
                                         />
                                     </Grid.Col>
                                     <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                                        <Select
-                                            label="Shift"
-                                            placeholder="Select shift"
-                                            data={
-                                                shiftList.length > 0
-                                                    ? shiftList
-                                                    : [{ value: '', label: 'Loading shifts...' }]
-                                            }
-                                            value={formValues.shiftId}
-                                            onChange={(value) => handleChange('shiftId', value)}
+                                        <MultiSelect
+                                            label="Shifts"
+                                            placeholder="Select shifts"
+                                            data={shiftList}
+                                            value={formValues.shiftIds}
+                                            onChange={(value) => handleChange('shiftIds', value)}
                                             required
-                                            error={errors.shiftId}
-
+                                            error={errors.shiftIds}
                                             radius="md"
+                                            searchable
+                                            clearable
                                         />
                                     </Grid.Col>
                                     <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
@@ -277,7 +267,6 @@ export default function AddEmployee() {
                                             onChange={(value) => handleChange('salaryType', value)}
                                             required
                                             error={errors.salaryType}
-
                                             radius="md"
                                         />
                                     </Grid.Col>

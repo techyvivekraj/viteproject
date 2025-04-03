@@ -1,91 +1,64 @@
-import { Group, Paper, SimpleGrid, Text } from '@mantine/core';
-import {
-  IconUsers,
-  IconUserOff,
-  IconClipboardCheck,
-  IconReportMoney,
-  IconAlertCircle,
-  IconChecklist,
-  IconBuildingFactory,
-  IconClock,
-  IconArrowUpRight,
-  IconArrowDownRight,
-  IconUserCheck,
-  IconClockPause,
-} from '@tabler/icons-react';
+import { SimpleGrid, Paper, Text, Group } from '@mantine/core';
+import { IconUsers, IconUserCheck, IconClock, IconUserOff, IconCalendar, IconUserPlus, IconClipboardCheck, IconStar } from '@tabler/icons-react';
 import PropTypes from 'prop-types';
-import classes from './StatsGrid.module.css';
 
-const icons = {
-  users: IconUsers,
-  leave: IconUserOff,
-  tasks: IconChecklist,
-  departments: IconBuildingFactory,
-  attendance: IconClock,
-  pending: IconClipboardCheck,
-  payroll: IconReportMoney,
-  alerts: IconAlertCircle,
-  userCheck: IconUserCheck,
-  clock: IconClock,
-  userOff: IconUserOff,
-  clockPause: IconClockPause,
-};
+const StatsGrid = ({ data }) => {
+  const getIcon = (iconName, color) => {
+    const iconProps = {
+      size: 20,
+      stroke: 1.5,
+      color: `var(--mantine-color-${color}-6)`
+    };
 
-const defaultData = [
-  { title: 'Total Employees', icon: 'users', value: '234', diff: 12 },
-  { title: 'Today Attendance', icon: 'attendance', value: '205', diff: 8 },
-  { title: 'Pending Tasks', icon: 'tasks', value: '15', diff: -5 },
-  { title: 'Active Departments', icon: 'departments', value: '8', diff: 0 },
-  { title: 'Pending Approvals', icon: 'alerts', value: '7', diff: -2 },
-];
-
-export default function StatsGrid({ data = defaultData, showDiff = false, vertical = false }) {
-  const stats = data.map((stat) => {
-    const Icon = icons[stat.icon];
-    const DiffIcon = stat.diff > 0 ? IconArrowUpRight : IconArrowDownRight;
-
-    return (
-      <Paper withBorder p="md" radius="md" key={stat.title}>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed" className={classes.title}>
-            {stat.title}
-          </Text>
-          <Icon 
-            className={classes.icon} 
-            size="1.4rem" 
-            stroke={1.5} 
-            style={stat.color ? { color: `var(--mantine-color-${stat.color}-6)` } : undefined}
-          />
-        </Group>
-
-        <Group align="flex-end" gap="xs" mt={25}>
-          <Text className={classes.value}>{stat.value}</Text>
-          {showDiff && stat.diff && (
-            <Text c={stat.diff > 0 ? 'teal' : 'red'} fz="sm" fw={500} className={classes.diff}>
-              <span>{stat.diff}%</span>
-              <DiffIcon size="1rem" stroke={1.5} />
-            </Text>
-          )}
-        </Group>
-
-        {showDiff && (
-          <Text fz="xs" c="dimmed" mt={7}>
-            Compared to previous month
-          </Text>
-        )}
-      </Paper>
-    );
-  });
+    switch (iconName) {
+      case 'users':
+        return <IconUsers {...iconProps} />;
+      case 'userCheck':
+        return <IconUserCheck {...iconProps} />;
+      case 'clock':
+        return <IconClock {...iconProps} />;
+      case 'userOff':
+        return <IconUserOff {...iconProps} />;
+      case 'calendar':
+        return <IconCalendar {...iconProps} />;
+      case 'userPlus':
+        return <IconUserPlus {...iconProps} />;
+      case 'clipboardCheck':
+        return <IconClipboardCheck {...iconProps} />;
+      case 'star':
+        return <IconStar {...iconProps} />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <SimpleGrid 
-      cols={{ base: 1, xs: 2, sm: 3, md: 5 }} 
-      spacing="md"
-    >
-      {stats}
+    <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
+      {data.map((stat) => (
+        <Paper
+          key={stat.title}
+          p="md"
+          radius="sm"
+          withBorder
+          style={{
+            borderLeft: `4px solid var(--mantine-color-${stat.color}-6)`,
+            backgroundColor: 'white'
+          }}
+        >
+          <Group justify="space-between" mb="xs">
+            <Text size="sm" c="dimmed">
+              {stat.title}
+            </Text>
+            {getIcon(stat.icon, stat.color)}
+          </Group>
+          <Text fw={600} size="xl" c={`${stat.color}.7`}>
+            {stat.value}
+          </Text>
+        </Paper>
+      ))}
     </SimpleGrid>
   );
-}
+};
 
 StatsGrid.propTypes = {
   data: PropTypes.arrayOf(
@@ -93,10 +66,9 @@ StatsGrid.propTypes = {
       title: PropTypes.string.isRequired,
       icon: PropTypes.string.isRequired,
       value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      diff: PropTypes.number,
-      color: PropTypes.string,
+      color: PropTypes.string.isRequired,
     })
   ),
-  showDiff: PropTypes.bool,
-  vertical: PropTypes.bool
 };
+
+export default StatsGrid;

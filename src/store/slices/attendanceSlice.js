@@ -1,182 +1,113 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { 
-    fetchAttendance, 
-    markCheckIn, 
-    markCheckOut, 
-    updateAttendanceApproval,
-    editAttendance,
-    markAttendance
-} from '../actions/attendance';
 
 const initialState = {
-    attendance: {
-        data: [],
-        pagination: {
-            total: 0,
-            page: 1,
-            limit: 10,
-            totalPages: 0
-        }
-    },
+    attendanceList: [],
     loading: false,
     error: null,
-    checkInStatus: 'idle',
-    checkInError: null,
-    checkOutStatus: 'idle',
-    checkOutError: null,
-    approvalStatus: 'idle',
-    approvalError: null
+    pagination: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0
+    }
 };
+
+// Selectors
+export const selectAttendance = (state) => ({
+    data: state.attendance.attendanceList,
+    pagination: state.attendance.pagination
+});
+
+export const selectLoading = (state) => state.attendance.loading;
+
+export const selectCheckInStatus = (state) => state.attendance.checkInStatus;
+
+export const selectCheckOutStatus = (state) => state.attendance.checkOutStatus;
+
+export const selectApprovalStatus = (state) => state.attendance.approvalStatus;
 
 const attendanceSlice = createSlice({
     name: 'attendance',
     initialState,
     reducers: {
-        resetCheckInStatus: (state) => {
-            state.checkInStatus = 'idle';
-            state.checkInError = null;
+        clearAttendanceError: (state) => {
+            state.error = null;
         },
-        resetCheckOutStatus: (state) => {
-            state.checkOutStatus = 'idle';
-            state.checkOutError = null;
-        },
-        resetApprovalStatus: (state) => {
-            state.approvalStatus = 'idle';
-            state.approvalError = null;
+        resetAttendanceState: (state) => {
+            return initialState;
         }
     },
     extraReducers: (builder) => {
         builder
             // Fetch Attendance
-            .addCase(fetchAttendance.pending, (state) => {
+            .addCase('attendance/fetchAttendance/pending', (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchAttendance.fulfilled, (state, action) => {
-                state.attendance = action.payload.data;
+            .addCase('attendance/fetchAttendance/fulfilled', (state, action) => {
                 state.loading = false;
-                state.error = null;
+                state.attendanceList = action.payload.data;
+                state.pagination = action.payload.pagination;
             })
-            .addCase(fetchAttendance.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-                state.attendance = initialState.attendance;
-            })
-
-            // Mark Check-in
-            .addCase(markCheckIn.pending, (state) => {
-                state.checkInStatus = 'loading';
-                state.checkInError = null;
-            })
-            .addCase(markCheckIn.fulfilled, (state, action) => {
-                state.checkInStatus = 'succeeded';
-                if (state.attendance?.data) {
-                    state.attendance.data.unshift(action.payload.data);
-                }
-            })
-            .addCase(markCheckIn.rejected, (state, action) => {
-                state.checkInStatus = 'failed';
-                state.checkInError = action.payload;
-            })
-
-            // Mark Check-out
-            .addCase(markCheckOut.pending, (state) => {
-                state.checkOutStatus = 'loading';
-                state.checkOutError = null;
-            })
-            .addCase(markCheckOut.fulfilled, (state, action) => {
-                state.checkOutStatus = 'succeeded';
-                if (state.attendance?.data) {
-                    const index = state.attendance.data.findIndex(
-                        item => item.id === action.payload.data.id
-                    );
-                    if (index !== -1) {
-                        state.attendance.data[index] = action.payload.data;
-                    }
-                }
-            })
-            .addCase(markCheckOut.rejected, (state, action) => {
-                state.checkOutStatus = 'failed';
-                state.checkOutError = action.payload;
-            })
-
-            // Update Approval Status
-            .addCase(updateAttendanceApproval.pending, (state) => {
-                state.approvalStatus = 'loading';
-                state.approvalError = null;
-            })
-            .addCase(updateAttendanceApproval.fulfilled, (state, action) => {
-                state.approvalStatus = 'succeeded';
-                if (state.attendance?.data) {
-                    const index = state.attendance.data.findIndex(
-                        item => item.id === action.payload.data.id
-                    );
-                    if (index !== -1) {
-                        state.attendance.data[index] = {
-                            ...state.attendance.data[index],
-                            approval_status: action.payload.data.status
-                        };
-                    }
-                }
-            })
-            .addCase(updateAttendanceApproval.rejected, (state, action) => {
-                state.approvalStatus = 'failed';
-                state.approvalError = action.payload;
-            })
-
-            // Edit Attendance
-            .addCase(editAttendance.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(editAttendance.fulfilled, (state, action) => {
-                state.loading = false;
-                state.error = null;
-                if (state.attendance?.data) {
-                    const index = state.attendance.data.findIndex(
-                        item => item.id === action.payload.data.id
-                    );
-                    if (index !== -1) {
-                        state.attendance.data[index] = action.payload.data;
-                    }
-                }
-            })
-            .addCase(editAttendance.rejected, (state, action) => {
+            .addCase('attendance/fetchAttendance/rejected', (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-
             // Mark Attendance
-            .addCase(markAttendance.pending, (state) => {
+            .addCase('attendance/markAttendance/pending', (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(markAttendance.fulfilled, (state, action) => {
+            .addCase('attendance/markAttendance/fulfilled', (state, action) => {
                 state.loading = false;
+                // Add new attendance to the list
+                state.attendanceList.unshift(action.payload.data);
+                state.pagination.total += 1;
+            })
+            .addCase('attendance/markAttendance/rejected', (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            // Edit Attendance
+            .addCase('attendance/editAttendance/pending', (state) => {
+                state.loading = true;
                 state.error = null;
-                if (state.attendance?.data) {
-                    state.attendance.data.unshift(action.payload.data);
+            })
+            .addCase('attendance/editAttendance/fulfilled', (state, action) => {
+                state.loading = false;
+                // Update attendance in the list
+                const index = state.attendanceList.findIndex(
+                    item => item.attendance_id === action.payload.data.id
+                );
+                if (index !== -1) {
+                    state.attendanceList[index] = action.payload.data;
                 }
             })
-            .addCase(markAttendance.rejected, (state, action) => {
+            .addCase('attendance/editAttendance/rejected', (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            // Update Approval Status
+            .addCase('attendance/updateApproval/pending', (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase('attendance/updateApproval/fulfilled', (state, action) => {
+                state.loading = false;
+                // Update attendance approval status in the list
+                const index = state.attendanceList.findIndex(
+                    item => item.attendance_id === action.payload.data.id
+                );
+                if (index !== -1) {
+                    state.attendanceList[index] = action.payload.data;
+                }
+            })
+            .addCase('attendance/updateApproval/rejected', (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });
     }
 });
 
-export const {
-    resetCheckInStatus,
-    resetCheckOutStatus,
-    resetApprovalStatus
-} = attendanceSlice.actions;
-
-// Selectors
-export const selectAttendance = (state) => state.attendance.attendance;
-export const selectLoading = (state) => state.attendance.loading;
-export const selectError = (state) => state.attendance.error;
-export const selectCheckInStatus = (state) => state.attendance.checkInStatus;
-export const selectCheckOutStatus = (state) => state.attendance.checkOutStatus;
-export const selectApprovalStatus = (state) => state.attendance.approvalStatus;
-
+export const { clearAttendanceError, resetAttendanceState } = attendanceSlice.actions;
 export default attendanceSlice.reducer; 

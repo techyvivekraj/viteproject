@@ -61,7 +61,7 @@ export default function Assets() {
 
 
   return (
-    <Paper shadow="xs" p="md">
+    <div>
       <DataTable
         title="Asset List"
         data={processedData}
@@ -75,6 +75,6 @@ export default function Assets() {
         hideMonthPicker={true}
       />
       <AddAsset opened={opened} closeModal={close} />
-    </Paper>
+    </div>
   );
 }

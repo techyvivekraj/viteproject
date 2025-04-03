@@ -19,7 +19,7 @@ const initialFormState = {
     joiningDate: new Date(),
     departmentId: '',
     designationId: '',
-    shiftId: '',
+    shiftIds: [''],
     salaryType: '',
     salary: '',
 
@@ -90,7 +90,6 @@ export const useAddEmployee = () => {
                 console.error('Error loading initial data:', error);
                 showError('Failed to load initial data');
             } finally {
-                // Add a small delay before setting loading to false to ensure data is processed
                 setTimeout(() => {
                     setIsLoadingDepartments(false);
                     setIsLoadingDesignations(false);
@@ -110,7 +109,7 @@ export const useAddEmployee = () => {
         })) || [];
 
         return [
-            { value: 'default', label: 'Select Department', disabled: true },
+            { value: '', label: 'Default' },
             ...deptList
         ];
     }, [departments?.data]);
@@ -122,7 +121,7 @@ export const useAddEmployee = () => {
         })) || [];
 
         return [
-            { value: 'default', label: 'Select Designation', disabled: true },
+            { value: '', label: 'Default' },
             ...desigList
         ];
     }, [designations?.data]);
@@ -134,7 +133,7 @@ export const useAddEmployee = () => {
         })) || [];
 
         return [
-            { value: 'default', label: 'Select Shift', disabled: true },
+            { value: '', label: 'Default' },
             ...shiftsList
         ];
     }, [shifts?.data]);
@@ -218,22 +217,18 @@ export const useAddEmployee = () => {
         } else if (!(formValues.joiningDate instanceof Date) || isNaN(formValues.joiningDate)) {
             newErrors.joiningDate = 'Invalid joining date';
         } else {
-            const minDate = new Date(2025, 0, 1);
+            const minDate = new Date(2000, 0, 1);
             if (formValues.joiningDate < minDate) {
                 newErrors.joiningDate = 'Joining date cannot be before year 2000';
             }
         }
 
-        if (!formValues.departmentId || formValues.departmentId === 'default') {
-            newErrors.departmentId = 'Department is required';
+        // Salary type validation
+        if (!formValues.salaryType) {
+            newErrors.salaryType = 'Salary type is required';
         }
-        if (!formValues.designationId || formValues.designationId === 'default') {
-            newErrors.designationId = 'Designation is required';
-        }
-        if (!formValues.shiftId || formValues.shiftId === 'default') {
-            newErrors.shiftId = 'Shift is required';
-        }
-        if (!formValues.salaryType) newErrors.salaryType = 'Salary type is required';
+
+        // Salary amount validation
         if (!formValues.salary && formValues.salary !== 0) {
             newErrors.salary = 'Salary amount is required';
         }
@@ -284,6 +279,12 @@ export const useAddEmployee = () => {
                         formData.append(key, formattedDate);
                     } else if (key === 'salary') {
                         formData.append(key, Number(formValues[key]));
+                    } else if (key === 'shiftIds') {
+                        // Handle multiple shifts - ensure it's an array
+                        const shiftIds = Array.isArray(formValues[key]) ? formValues[key] : [formValues[key]];
+                        shiftIds.forEach(shiftId => {
+                            formData.append('shiftIds[]', shiftId);
+                        });
                     } else {
                         formData.append(key, formValues[key]);
                     }
@@ -324,9 +325,9 @@ export const useAddEmployee = () => {
         if (!isLoadingDepartments && !isLoadingDesignations && !isLoadingShifts) {
             setFormValues(prev => ({
                 ...prev,
-                departmentId: prev.departmentId || 'default',
-                designationId: prev.designationId || 'default',
-                shiftId: prev.shiftId || 'default'
+                departmentId: prev.departmentId || '',
+                designationId: prev.designationId || '',
+                shiftIds: prev.shiftIds || ['']
             }));
         }
     }, [isLoadingDepartments, isLoadingDesignations, isLoadingShifts]);

@@ -1,13 +1,30 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { axiosInstance } from '../../components/api';
 
+// Helper function to handle retries
+const retryWithBackoff = async (fn, retries = 3, delay = 1000) => {
+    try {
+        return await fn();
+    } catch (error) {
+        if (error.response?.status === 429 && retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return retryWithBackoff(fn, retries - 1, delay * 2);
+        }
+        throw error;
+    }
+};
+
 // Fetch Employees
 export const fetchEmployees = createAsyncThunk(
     'organisation/fetchEmployees',
-    async (organizationId, { rejectWithValue }) => {
+    async ({ organizationId, page = 1, limit = 10 }, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.get(`/employees?organizationId=${organizationId}`);
-            return response.data;
+            return await retryWithBackoff(async () => {
+                const response = await axiosInstance.get(
+                    `/employees?organizationId=${organizationId}&page=${page}&limit=${limit}`
+                );
+                return response.data;
+            });
         } catch (error) {
             return rejectWithValue(error.response?.data || 'Failed to fetch employees');
         }
@@ -19,12 +36,14 @@ export const addEmployee = createAsyncThunk(
     'organisation/addEmployee',
     async (employeeData, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.post('/employees', employeeData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+            return await retryWithBackoff(async () => {
+                const response = await axiosInstance.post('/employees', employeeData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                return response.data;
             });
-            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data || 'Failed to add employee');
         }
@@ -36,12 +55,14 @@ export const updateEmployee = createAsyncThunk(
     'organisation/updateEmployee',
     async ({ id, updatedData }, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.put(`/employees/${id}`, updatedData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+            return await retryWithBackoff(async () => {
+                const response = await axiosInstance.put(`/employees/${id}`, updatedData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                return response.data;
             });
-            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data || 'Failed to update employee');
         }
@@ -53,8 +74,10 @@ export const deleteEmployee = createAsyncThunk(
     'employees/deleteEmployee',
     async ({ id, organizationId }, { rejectWithValue }) => {
         try {
-            await axiosInstance.delete(`/employees/${id}?organizationId=${organizationId}`);
-            return { id };
+            return await retryWithBackoff(async () => {
+                await axiosInstance.delete(`/employees/${id}?organizationId=${organizationId}`);
+                return { id };
+            });
         } catch (error) {
             return rejectWithValue(error.response?.data || 'Failed to delete employee');
         }
@@ -66,8 +89,10 @@ export const fetchDepartments = createAsyncThunk(
     'organisation/fetchDepartmentsForEmployee',
     async (organizationId, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.get(`/departments?organizationId=${organizationId}`);
-            return response.data;
+            return await retryWithBackoff(async () => {
+                const response = await axiosInstance.get(`/departments?organizationId=${organizationId}`);
+                return response.data;
+            });
         } catch (error) {
             return rejectWithValue(error.response?.data || 'Failed to fetch departments');
         }

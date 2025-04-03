@@ -48,7 +48,7 @@ export default function Holidays() {
     }, []);
 
     return (
-        <Paper shadow="xs" p="md">
+        <div>
             <DataTable
                 title="Holiday List"
                 data={processedData}
@@ -62,6 +62,6 @@ export default function Holidays() {
                 hideMonthPicker={true}
             />
             <AddHoliday opened={opened} closeModal={close} />
-        </Paper>
+        </div>
     );
 } 

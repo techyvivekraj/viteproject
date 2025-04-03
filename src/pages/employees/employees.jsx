@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { Text, Badge, Paper } from '@mantine/core';
+import { Text, Badge, Paper, Pagination } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import DataTable from '../../components/DataTable/datatable';
 import { useEmployee } from '../../hooks/useEmployee';
@@ -8,7 +8,14 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Employees() {
     const navigate = useNavigate();
-    const { employees, loading, handleDelete } = useEmployee();
+    const { 
+        employees = [], 
+        loading, 
+        handleDelete, 
+        pagination, 
+        currentPage, 
+        handlePageChange 
+    } = useEmployee();
 
     const columns = useMemo(() => [
         {
@@ -91,17 +98,28 @@ export default function Employees() {
 
     return (
         <Paper radius="md" p={{ base: 'md', sm: 'xl' }} bg="var(--mantine-color-body)">
-                <DataTable
-                    title="Employee List"
-                    data={employees?.data || []}
-                    columns={columns}
-                    searchPlaceholder="Search employees..."
-                    pagination={true}
-                    onAddClick={handleAddClick}
-                    onEditClick={handleEditClick}
-                    onDeleteClick={handleDeleteClick}
-                    isLoading={loading}
-                />
+            <DataTable
+                title="Employee List"
+                data={employees}
+                columns={columns}
+                searchPlaceholder="Search employees..."
+                pagination={true}
+                onAddClick={handleAddClick}
+                onEditClick={handleEditClick}
+                onDeleteClick={handleDeleteClick}
+                isLoading={loading}
+            />
+            {pagination?.totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                    <Pagination
+                        total={pagination.totalPages}
+                        value={currentPage}
+                        onChange={handlePageChange}
+                        size="sm"
+                        radius="md"
+                    />
+                </div>
+            )}
         </Paper>
     );
 } 

@@ -24,7 +24,7 @@ const fetchAttendance = createAsyncThunk(
                 return acc;
             }, {});
 
-            const response = await axiosInstance.get('/attendance', { params });
+            const response = await axiosInstance.get('/attendance/date-range', { params });
             
             // Check if response has the expected structure
             if (!response.data || !response.data.data) {
@@ -35,85 +35,6 @@ const fetchAttendance = createAsyncThunk(
         } catch (error) {
             console.error('Fetch attendance error:', error);
             return rejectWithValue(error.response?.data || 'Failed to fetch attendance');
-        }
-    }
-);
-
-// Mark Check-in
-const markCheckIn = createAsyncThunk(
-    'attendance/markCheckIn',
-    async (data, { rejectWithValue }) => {
-        try {
-            const formData = {
-                date: data.date.toISOString(),
-                checkInTime: data.checkInTime.toISOString(),
-                checkInLocation: data.checkInLocation,
-                checkInPhoto: data.checkInPhoto
-            };
-
-            const response = await axiosInstance.post('/attendance/check-in', formData);
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data || 'Failed to mark check-in');
-        }
-    }
-);
-
-// Mark Check-out
-const markCheckOut = createAsyncThunk(
-    'attendance/markCheckOut',
-    async ({ id, ...data }, { rejectWithValue }) => {
-        try {
-            const formData = {
-                checkOutTime: data.checkOutTime.toISOString(),
-                checkOutLocation: data.checkOutLocation,
-                checkOutPhoto: data.checkOutPhoto
-            };
-
-            const response = await axiosInstance.post(`/attendance/${id}/check-out`, formData);
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data || 'Failed to mark check-out');
-        }
-    }
-);
-
-// Update Attendance Approval Status
-const updateAttendanceApproval = createAsyncThunk(
-    'attendance/updateApproval',
-    async ({ id, status, rejectionReason }, { rejectWithValue }) => {
-        try {
-            const response = await axiosInstance.put(`/attendance/${id}/approval`, {
-                status,
-                rejectionReason
-            });
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data || 'Failed to update attendance status');
-        }
-    }
-);
-
-// Add this new action for editing attendance
-const editAttendance = createAsyncThunk(
-    'attendance/editAttendance',
-    async (data, { rejectWithValue }) => {
-        try {
-            const response = await axiosInstance.put(`/attendance/${data.id}`, {
-                checkInTime: data.checkInTime,
-                checkOutTime: data.checkOutTime,
-                status: data.status,
-                remarks: data.remarks
-            });
-            
-            if (!response.data || !response.data.data) {
-                throw new Error('Invalid response format');
-            }
-
-            return response.data;
-        } catch (error) {
-            console.error('Edit attendance error:', error);
-            return rejectWithValue(error.response?.data || 'Failed to edit attendance');
         }
     }
 );
@@ -144,12 +65,56 @@ const markAttendance = createAsyncThunk(
     }
 );
 
+// Edit Attendance
+const editAttendance = createAsyncThunk(
+    'attendance/editAttendance',
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put(`/attendance/${data.id}`, {
+                checkInTime: data.checkInTime,
+                checkOutTime: data.checkOutTime,
+                status: data.status,
+                remarks: data.remarks
+            });
+            
+            if (!response.data || !response.data.data) {
+                throw new Error('Invalid response format');
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('Edit attendance error:', error);
+            return rejectWithValue(error.response?.data || 'Failed to edit attendance');
+        }
+    }
+);
+
+// Update Approval Status
+const updateAttendanceApproval = createAsyncThunk(
+    'attendance/updateApproval',
+    async ({ id, status, rejectionReason }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put(`/attendance/${id}/approval`, {
+                status,
+                rejectionReason
+            });
+            
+            if (!response.data || !response.data.data) {
+                throw new Error('Invalid response format');
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('Update approval error:', error);
+            return rejectWithValue(error.response?.data || 'Failed to update approval status');
+        }
+    }
+);
+
 // Single export statement for all actions
 export {
     fetchAttendance,
-    markCheckIn,
-    markCheckOut,
-    updateAttendanceApproval,
+    markAttendance,
     editAttendance,
-    markAttendance
+    updateAttendanceApproval
 }; 

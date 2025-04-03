@@ -22,11 +22,8 @@ export const useAttendance = () => {
     const dispatch = useDispatch();
     const organizationId = localStorage.getItem('orgId');
     
-    // Get attendance data from redux store
-    const attendance = useSelector(selectAttendance) || {
-        data: [],
-        pagination: { total: 0, page: 1, limit: 10, totalPages: 0 }
-    };
+    // Get attendance data from redux store using selectors
+    const { data: attendanceList, pagination } = useSelector(selectAttendance);
     const loading = useSelector(selectLoading);
     const checkInStatus = useSelector(selectCheckInStatus);
     const checkOutStatus = useSelector(selectCheckOutStatus);
@@ -66,7 +63,7 @@ export const useAttendance = () => {
     const departments = useSelector(selectDepartments);
     const [isLoadingDepartments, setIsLoadingDepartments] = useState(true);
 
-    // Remove the old fetchDepartments function and update the useEffect
+    // Load departments
     useEffect(() => {
         const loadDepartments = async () => {
             if (!organizationId) return;
@@ -89,7 +86,7 @@ export const useAttendance = () => {
         loadDepartments();
     }, [dispatch, organizationId]);
 
-    // Transform departments data for dropdowns (modify this)
+    // Transform departments data for dropdowns
     const departmentList = useMemo(() => {
         const deptList = departments?.data?.map(dept => ({
             value: String(dept.id),
@@ -122,13 +119,13 @@ export const useAttendance = () => {
 
     // Filter data locally for department and status
     const filteredData = useMemo(() => {
-        if (!attendance?.data?.length) return [];
+        if (!attendanceList?.length) return [];
         
         if (!localFilters.departmentId && !localFilters.status) {
-            return attendance.data;
+            return attendanceList;
         }
         
-        return attendance.data.filter(item => {
+        return attendanceList.filter(item => {
             const matchesDepartment = !localFilters.departmentId || 
                 String(item.department?.id) === localFilters.departmentId;
             const matchesStatus = !localFilters.status || 
@@ -136,11 +133,11 @@ export const useAttendance = () => {
             
             return matchesDepartment && matchesStatus;
         });
-    }, [attendance?.data, localFilters.departmentId, localFilters.status]);
+    }, [attendanceList, localFilters.departmentId, localFilters.status]);
 
     // Calculate stats whenever attendance data changes
     useEffect(() => {
-        if (!attendance?.data?.length) {
+        if (!attendanceList?.length) {
             setStats({
                 presentCount: 0,
                 lateCount: 0,
@@ -155,7 +152,7 @@ export const useAttendance = () => {
             const startDate = filters.startDate?.toISOString().split('T')[0];
             const endDate = filters.endDate?.toISOString().split('T')[0];
             
-            const dateRangeRecords = attendance.data.filter(record => {
+            const dateRangeRecords = attendanceList.filter(record => {
                 const recordDate = new Date(record.date).toISOString().split('T')[0];
                 return recordDate >= startDate && recordDate <= endDate;
             });
@@ -165,7 +162,7 @@ export const useAttendance = () => {
             const absent = dateRangeRecords.filter(r => r.status === 'absent').length;
             const pending = dateRangeRecords.filter(r => r.approvalStatus === 'pending').length;
             
-            const totalEmployees = attendance.pagination?.total || 0;
+            const totalEmployees = pagination?.total || 0;
             const notSet = Math.max(0, totalEmployees - (present + late + absent));
 
             setStats({
@@ -185,7 +182,7 @@ export const useAttendance = () => {
                 notSetCount: 0
             });
         }
-    }, [attendance?.data, filters.startDate, filters.endDate, attendance.pagination?.total]);
+    }, [attendanceList, filters.startDate, filters.endDate, pagination?.total]);
 
     // Handle mark attendance
     const handleMarkAttendance = useCallback(async (data) => {
@@ -201,12 +198,14 @@ export const useAttendance = () => {
                 ...filters, 
                 ...localFilters 
             }));
+            return true;
         } catch (error) {
             showNotification({
                 title: 'Error',
                 message: error.message || 'Failed to mark attendance',
                 color: 'red'
             });
+            return false;
         }
     }, [dispatch, filters, localFilters]);
 
@@ -223,12 +222,14 @@ export const useAttendance = () => {
                 ...filters, 
                 ...localFilters 
             }));
+            return true;
         } catch (error) {
             showNotification({
                 title: 'Error',
                 message: error.message || 'Failed to update attendance',
                 color: 'red'
             });
+            return false;
         }
     }, [dispatch, filters, localFilters]);
 
@@ -245,12 +246,14 @@ export const useAttendance = () => {
                 ...filters, 
                 ...localFilters 
             }));
+            return true;
         } catch (error) {
             showNotification({
                 title: 'Error',
                 message: error.message || 'Failed to update approval status',
                 color: 'red'
             });
+            return false;
         }
     }, [dispatch, filters, localFilters]);
 
@@ -264,22 +267,8 @@ export const useAttendance = () => {
         setFilters(prev => ({ ...prev, page }));
     }, []);
 
-    // Load attendance data when filters change
-    useEffect(() => {
-        dispatch(fetchAttendance({ 
-            ...filters, 
-            ...localFilters 
-        }));
-    }, [dispatch, filters, localFilters]);
-
-    // Add this temporarily to debug
-    useEffect(() => {
-        console.log('Attendance data:', attendance?.data);
-        console.log('Local filters:', localFilters);
-    }, [attendance?.data, localFilters]);
-
     return {
-        attendance: { ...attendance, data: filteredData },
+        attendance: { data: filteredData, pagination },
         loading,
         checkInStatus,
         checkOutStatus,

@@ -1,19 +1,32 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { rateLimiter } from '../utils/rateLimiter';
+
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export const axiosInstance = axios.create({
-    baseURL: API_URL,
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    }
-    
-});
+const createAxiosInstance = () => {
+    const instance = axios.create({
+        baseURL: API_URL,
+        timeout: 10000,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
 
-axiosInstance.interceptors.request.use(
-    (config) => {
+    // Request interceptor
+    instance.interceptors.request.use(async (config) => {
+        // Wait for a slot in the rate limiter
+        await rateLimiter.waitForSlot();
+        
+        // Add auth token if exists
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        
         // Log URL and parameters
         console.log('Request URL:', config.baseURL + config.url);
         console.log('Request Method:', config.method.toUpperCase());
@@ -22,17 +35,56 @@ axiosInstance.interceptors.request.use(
             data: config.data,      // Request body
             headers: config.headers // Request headers
         });
-
-        const authToken = localStorage.getItem('auth_token');
-        if (authToken) {
-            config.headers['Authorization'] = `Bearer ${authToken}`;
-        }
+        
         return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+    });
+
+    // Response interceptor with retry logic
+    instance.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            const originalRequest = error.config;
+            
+            // If it's a rate limit error and we haven't retried yet
+            if (error.response?.status === 429 && !originalRequest._retry) {
+                originalRequest._retry = true;
+                
+                // Retry the request after delay
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve(instance(originalRequest));
+                    }, RETRY_DELAY);
+                });
+            }
+            
+            // For other errors, retry up to MAX_RETRIES times
+            if (!originalRequest._retryCount) {
+                originalRequest._retryCount = 0;
+            }
+            
+            if (originalRequest._retryCount < MAX_RETRIES) {
+                originalRequest._retryCount++;
+                
+                // Exponential backoff
+                const delay = RETRY_DELAY * Math.pow(2, originalRequest._retryCount - 1);
+                
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve(instance(originalRequest));
+                    }, delay);
+                });
+            }
+            
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
+            return Promise.reject(error);
+        }
+    );
+
+    return instance;
+};
+
+export const axiosInstance = createAxiosInstance();
 
 const handleError = (error) => {
     let errorMessage = 'An unknown error occurred.';
@@ -92,17 +144,11 @@ const handleError = (error) => {
     
     return errorMessage;
 };
-axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        const errorMessage = handleError(error);
-        toast.error(errorMessage);
-        return Promise.reject(error);
-    }
-);
+
 export const showToast = (message) => {
     toast.success(message);
 };
+
 export const showError = (message) => {
     toast.error(message);
 };

@@ -9,6 +9,8 @@ import Organisation from './pages/organisation/organisation';
 import NotFound from './pages/NotFound';
 import Attendance from './pages/attendance/attendance';
 import Overtime from './pages/overtime/overtime';
+import Payroll from './pages/payroll/payroll';
+import Reports from './pages/reports/reports';
 // import Expense from '../features/expense/expense';
 // import Payroll from '../features/payroll/payroll';
 // import Ticket from '../features/ticket/ticket';
@@ -32,6 +34,8 @@ const Navigator = () => {
           <Route path="organisation" element={<Organisation />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="overtime" element={<Overtime />} />
+          <Route path="payroll" element={<Payroll />} />
+          <Route path="reports" element={<Reports />} />
           {/* Catch all route for 404 */}
           <Route path="*" element={<NotFound />} />
            {/*<Route path="attendance" element={<Attendance />} />

@@ -10,7 +10,15 @@ import {
 } from '../actions/employee';
 
 const initialState = {
-    employees: null,
+    employees: {
+        data: [],
+        pagination: {
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 0
+        }
+    },
     departments: null,
     loading: false,
     error: null,
@@ -48,7 +56,15 @@ const employeeSlice = createSlice({
                 state.error = null;
             })
             .addCase(fetchEmployees.fulfilled, (state, action) => {
-                state.employees = action.payload;
+                state.employees = {
+                    data: action.payload.data || [],
+                    pagination: {
+                        total: action.payload.pagination?.total || 0,
+                        page: action.payload.pagination?.page || 1,
+                        limit: action.payload.pagination?.limit || 10,
+                        totalPages: action.payload.pagination?.totalPages || 0
+                    }
+                };
                 state.loading = false;
                 state.lastFetch = Date.now();
                 state.error = null;
@@ -56,7 +72,15 @@ const employeeSlice = createSlice({
             .addCase(fetchEmployees.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                state.employees = null;
+                state.employees = {
+                    data: [],
+                    pagination: {
+                        total: 0,
+                        page: 1,
+                        limit: 10,
+                        totalPages: 0
+                    }
+                };
             })
 
             // Add Employee
@@ -162,6 +186,7 @@ export const selectDepartments = (state) => state.employees.departments;
 export const selectLoading = (state) => state.employees.loading;
 export const selectError = (state) => state.employees.error;
 export const selectLastFetch = (state) => state.employees.lastFetch;
+export const selectPagination = (state) => state.employees.pagination;
 export const selectAddEmployeeStatus = (state) => state.employees.addEmployeeStatus;
 export const selectAddEmployeeError = (state) => state.employees.addEmployeeError;
 export const selectUpdateStatus = (state) => state.employees.updateStatus;
