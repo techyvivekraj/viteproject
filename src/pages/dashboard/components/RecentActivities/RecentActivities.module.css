@@ -1,8 +1,0 @@
-.icon {
-  opacity: 0.8;
-}
-
-.timelineItem {
-  padding: var(--mantine-spacing-xs);
-  border-radius: var(--mantine-radius-sm);
-} 

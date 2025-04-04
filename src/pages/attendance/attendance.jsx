@@ -555,12 +555,6 @@ export default function Attendance() {
                 <StatsGrid
                     data={[
                         {
-                            title: 'Total Employees',
-                            icon: 'users',
-                            value: attendance?.pagination?.total || '0',
-                            color: 'blue'
-                        },
-                        {
                             title: 'Present Today',
                             icon: 'userCheck',
                             value: stats?.presentCount || '0',

@@ -8,10 +8,10 @@ ProtectedRoute.propTypes = {
 };
   const user = localStorage.getItem('uid');
   
-  // if (!user) {
-  //   // Redirect to login if no user is found
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!user) {
+    // Redirect to login if no user is found
+    return <Navigate to="/login" replace />;
+  }
 
   // If user is authenticated, render the protected content
   return children;
