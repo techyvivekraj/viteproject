@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.full-background {
+  background-color: #f8f9fa;
+}
+
+.inner {
+  border-bottom: 1px solid #e9ecef;
+  background-color: #fff;
+}
+
+.mantine-AppShell-navbar {
+  background-color: #fff !important;
+  border-right: 1px solid #e9ecef !important;
+}
+
+.nav-group {
+  margin-bottom: 1rem;
+}
+
+.mantine-NavLink-root {
+  border-radius: 4px;
+  margin: 2px 4px;
+}
+
+.mantine-NavLink-root[data-active] {
+  background-color: #f1f3f5;
+}
+
+.mantine-NavLink-root:hover {
+  background-color: #f8f9fa;
+}
+
+.mantine-ActionIcon-root {
+  border: 1px solid #e9ecef;
+}
+
+.mantine-AppShell-main {
+  background-color: #f8f9fa;
+}
+
+.mantine-ScrollArea-root {
+  height: 100%;
+}
