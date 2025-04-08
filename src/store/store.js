@@ -10,7 +10,7 @@ import holidaySlice from './slices/organisation/holidaySlice';
 import shiftSlice from './slices/organisation/shiftSlice';
 import designationSlice from './slices/organisation/designationSlice';
 import attendanceReducer from './slices/attendanceSlice';
-import overtimeReducer from './slices/overtime/overtimeSlice';
+import overtimeReducer from './slices/overtimeSlice';
 // import advanceSlice from './slices/advanceSlice';
 // import finesSlice from './slices/finesSlice';
 // import remarkSlice from './slices/remarkSlice';

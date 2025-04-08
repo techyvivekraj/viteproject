@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Text } from '@mantine/core';
-import { 
-    selectOvertime,
-    selectLoading 
-} from '../store/slices/overtime/overtimeSlice';
-import { fetchOvertime, deleteOvertime } from '../../store/actions/overtime/overtime';
 import { showError } from '../components/api';
+import { selectOvertime, selectLoading } from '../store/slices/overtimeSlice';
+import { deleteOvertime, fetchOvertime } from '../store/actions/overtime';
 
 export const useOvertime = () => {
     const dispatch = useDispatch();

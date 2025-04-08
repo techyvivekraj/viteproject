@@ -4,7 +4,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import DataTable from '../../components/DataTable/datatable';
 import AddOvertime from './add_overtime';
-import { useOvertime } from '../../hooks/overtime/useOvertime';
+import { useOvertime } from '../../hooks/useOvertime';
 
 export default function Overtime() {
     const [opened, { open, close }] = useDisclosure(false);

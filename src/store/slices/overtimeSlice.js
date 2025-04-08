@@ -4,7 +4,7 @@ import {
     addOvertime,
     updateOvertime,
     deleteOvertime
-} from '../../actions/overtime';
+} from '../actions/overtime';
 
 const initialState = {
     overtime: [],
