@@ -10,13 +10,9 @@ import {
   Button,
   Group,
   Stack,
-  Textarea,
   FileInput,
-  Text,
   LoadingOverlay,
 } from '@mantine/core';
-import { useOrganizationStore } from '../store/organization';
-import type { Candidate } from '../types';
 
 export default function AddCandidate() {
   const navigate = useNavigate();

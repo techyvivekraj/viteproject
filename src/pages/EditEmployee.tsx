@@ -18,16 +18,10 @@ import {
   FileInput,
   Tooltip,
   ActionIcon,
-  Alert,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import {
-  IconUser,
-  IconAddressBook,
-  IconBuildingBank,
-  IconFileText,
   IconInfoCircle,
-  IconUpload,
 } from '@tabler/icons-react';
 import { useMediaQuery } from '@mantine/hooks';
 

@@ -26,7 +26,6 @@ import {
   Filter, 
   MoreVertical, 
   ArrowUpRight, 
-  ArrowDownRight,
   CheckCircle,
   XCircle,
   AlertCircle
@@ -165,14 +164,6 @@ const departmentStats: DepartmentStatItem[] = [
 export default function Dashboard() {
   const theme = useMantineTheme();
   const [activeTab, setActiveTab] = useState<string>('overview');
-
-  const getStatusColor = (status: QuickStatItem['status']) => {
-    switch (status) {
-      case 'warning': return theme.colors.orange[6];
-      case 'danger': return theme.colors.red[6];
-      default: return theme.colors.green[6];
-    }
-  };
 
   const getStatusIcon = (status: QuickStatItem['status']) => {
     switch (status) {

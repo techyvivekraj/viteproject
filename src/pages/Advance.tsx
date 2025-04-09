@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Title,
@@ -7,31 +7,21 @@ import {
   Stack,
   Table,
   Text,
-  Badge,
   Button,
   Modal,
   TextInput,
-  ActionIcon,
-  Menu,
   Textarea,
   Select,
   LoadingOverlay,
   Alert,
   Avatar,
   NumberInput,
-  Progress,
 } from '@mantine/core';
 import {
   Plus,
   Search,
   Filter,
-  CheckCircle2,
-  XCircle,
   AlertCircle,
-  MoreVertical,
-  ThumbsUp,
-  ThumbsDown,
-  MessageCircle,
   UserPlus,
   Calculator,
   Eye,
@@ -58,11 +48,9 @@ export default function Advance() {
   const [approvalComment, setApprovalComment] = useState('');
   const userRole = useOrganizationStore((state) => state.userRole);
   const { 
-    requests, 
     loading, 
     requestAdvance, 
     approveAdvance, 
-    cancelAdvance,
     getEmployeeLoanSummaries,
   } = useAdvanceStore();
 
@@ -139,27 +127,7 @@ export default function Advance() {
     setApprovalComment('');
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'yellow',
-      approved: 'green',
-      rejected: 'red',
-    };
-    return colors[status] || 'gray';
-  };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <CheckCircle2 size={16} />;
-      case 'pending':
-        return <Calculator size={16} />;
-      case 'rejected':
-        return <XCircle size={16} />;
-      default:
-        return <AlertCircle size={16} />;
-    }
-  };
 
   const employeeSummaries = getEmployeeLoanSummaries();
 

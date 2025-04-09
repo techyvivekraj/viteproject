@@ -35,10 +35,6 @@ export default function AddEmployee() {
   const navigate = useNavigate();
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);
-  const [isLoadingDesignations, setIsLoadingDesignations] = useState(false);
-  const [isLoadingShifts, setIsLoadingShifts] = useState(false);
-  const [isLoadingCity, setIsLoadingCity] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isMobile = useMediaQuery('(max-width: 48em)');
@@ -157,7 +153,7 @@ export default function AddEmployee() {
               variant="light"
               color="red"
               onClick={handleCancel}
-              disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+              disabled={loading}
               size={getSize()}
             >
               Cancel
@@ -166,7 +162,7 @@ export default function AddEmployee() {
               type="submit"
               form="employee-form"
               loading={loading}
-              disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+              disabled={loading}
               color="blue"
               size={getSize()}
             >
@@ -425,15 +421,11 @@ export default function AddEmployee() {
                       error={errors.postalCode}
                       radius="md"
                       rightSection={
-                        isLoadingCity ? (
-                          <IconInfoCircle size={isMobile ? 12 : 16} className="animate-spin" />
-                        ) : (
-                          <Tooltip label="Enter 6-digit postal code">
-                            <ActionIcon size="sm" variant="subtle">
-                              <IconInfoCircle size={isMobile ? 12 : 16} />
-                            </ActionIcon>
-                          </Tooltip>
-                        )
+                        <Tooltip label="Enter 6-digit postal code">
+                          <ActionIcon size="sm" variant="subtle">
+                            <IconInfoCircle size={isMobile ? 12 : 16} />
+                          </ActionIcon>
+                        </Tooltip>
                       }
                     />
                   </Grid.Col>
@@ -683,7 +675,7 @@ export default function AddEmployee() {
                 variant="light"
                 color="red"
                 onClick={handleCancel}
-                disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+                disabled={loading}
                 size={getSize()}
               >
                 Cancel
@@ -693,7 +685,7 @@ export default function AddEmployee() {
                   <Button
                     variant="light"
                     onClick={prevStep}
-                    disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+                    disabled={loading}
                     size={getSize()}
                   >
                     Previous
@@ -702,7 +694,7 @@ export default function AddEmployee() {
                 {active < 3 ? (
                   <Button
                     onClick={nextStep}
-                    disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+                    disabled={loading}
                     size={getSize()}
                   >
                     Next
@@ -712,7 +704,7 @@ export default function AddEmployee() {
                     type="submit"
                     form="employee-form"
                     loading={loading}
-                    disabled={loading || isLoadingDepartments || isLoadingDesignations || isLoadingShifts}
+                    disabled={loading}
                     color="blue"
                     size={getSize()}
                   >

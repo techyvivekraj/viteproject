@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Title,
   Paper,
@@ -11,7 +11,6 @@ import {
   Modal,
   TextInput,
   ActionIcon,
-  Menu,
   Textarea,
   Select,
   LoadingOverlay,
@@ -36,7 +35,6 @@ import {
   Download,
   Trash,
   Calendar,
-  MoreVertical,
 } from 'lucide-react';
 import { useDocumentsStore } from '../store/documents';
 import { useOrganizationStore } from '../store/organization';
