@@ -5,6 +5,7 @@ import Departments from './pages/Departments';
 import Employees from './pages/Employees';
 import AddEmployee from './pages/AddEmployee';
 import EditEmployee from './pages/EditEmployee';
+import EmployeeDetails from './pages/EmployeeDetails';
 import AttendanceManagement from './pages/AttendanceManagement';
 import ShiftManagement from './pages/ShiftManagement';
 import Overtime from './pages/Overtime';
@@ -49,6 +50,7 @@ function App() {
           <Route path="/employees" element={<Employees />} />
           <Route path="/employees/add" element={<AddEmployee />} />
           <Route path="/employees/edit/:employeeId" element={<EditEmployee />} />
+          <Route path="/employees/:employeeId" element={<EmployeeDetails />} />
           <Route path="/departments" element={<Departments />} />
           <Route path="/attendance" element={<AttendanceManagement />} />
           <Route path="/shifts" element={<ShiftManagement />} />

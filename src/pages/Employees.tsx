@@ -15,7 +15,7 @@ import {
   Select,
   LoadingOverlay,
 } from '@mantine/core';
-import { Plus, Search,  Edit, Trash, Filter } from 'lucide-react';
+import { Plus, Search, Edit, Trash, Filter, Eye } from 'lucide-react';
 import { useOrganizationStore } from '../store/organization';
 import type { Employee } from '../types';
 
@@ -89,6 +89,10 @@ export default function Employees() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewEmployee = (employeeId: string) => {
+    navigate(`/employees/${employeeId}`);
   };
 
   return (
@@ -174,26 +178,35 @@ export default function Employees() {
                         {employee.status}
                       </Badge>
                     </Table.Td>
-                    {canManageEmployees && (
-                      <Table.Td>
-                        <Group gap="xs">
-                          <ActionIcon
-                            variant="light"
-                            color="blue"
-                            onClick={() => handleEditEmployee(employee.id)}
-                          >
-                            <Edit size={16} />
-                          </ActionIcon>
-                          <ActionIcon
-                            variant="light"
-                            color="red"
-                            onClick={() => handleDeleteEmployee(employee.id)}
-                          >
-                            <Trash size={16} />
-                          </ActionIcon>
-                        </Group>
-                      </Table.Td>
-                    )}
+                    <Table.Td>
+                      <Group gap="xs">
+                        <ActionIcon
+                          variant="light"
+                          color="blue"
+                          onClick={() => handleViewEmployee(employee.id)}
+                        >
+                          <Eye size={16} />
+                        </ActionIcon>
+                        {canManageEmployees && (
+                          <>
+                            <ActionIcon
+                              variant="light"
+                              color="blue"
+                              onClick={() => handleEditEmployee(employee.id)}
+                            >
+                              <Edit size={16} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="light"
+                              color="red"
+                              onClick={() => handleDeleteEmployee(employee.id)}
+                            >
+                              <Trash size={16} />
+                            </ActionIcon>
+                          </>
+                        )}
+                      </Group>
+                    </Table.Td>
                   </Table.Tr>
                 ))
               )}

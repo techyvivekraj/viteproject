@@ -156,6 +156,85 @@ export interface Employee {
   department: string;
   hire_date: string;
   status: string;
+  phone?: string;
+  address?: string;
+  date_of_birth?: string;
+  gender?: string;
+  emergency_contact?: string;
+  emergency_contact_name?: string;
+  reporting_manager?: string;
+  bank_account_number?: string;
+  bank_ifsc?: string;
+  bank_name?: string;
+  documents?: {
+    id: string;
+    name: string;
+    type: string;
+    uploaded_at: string;
+  }[];
+  performance?: {
+    year: string;
+    rating: string;
+    review_date: string;
+  }[];
+  attendance?: {
+    present: number;
+    absent: number;
+    late: number;
+    leave: number;
+    total_days: number;
+    attendance_percentage: number;
+  };
+  attendance_records?: {
+    date: string;
+    check_in: string;
+    check_out: string;
+    status: 'present' | 'late' | 'absent' | 'leave';
+  }[];
+  leave_balance?: {
+    annual: number;
+    sick: number;
+    personal: number;
+  };
+  leave_requests?: {
+    id: string;
+    type: string;
+    start_date: string;
+    end_date: string;
+    status: 'approved' | 'pending' | 'rejected';
+    days: number;
+  }[];
+  overtime?: {
+    id: string;
+    date: string;
+    hours: number;
+    reason: string;
+    status: 'approved' | 'pending' | 'rejected';
+    amount: number;
+  }[];
+  advances?: {
+    id: string;
+    date: string;
+    amount: number;
+    reason: string;
+    status: 'approved' | 'pending' | 'rejected';
+    repayment_status: 'completed' | 'in_progress' | 'pending';
+  }[];
+  fines?: {
+    id: string;
+    date: string;
+    amount: number;
+    reason: string;
+    status: 'paid' | 'pending';
+  }[];
+  tasks?: {
+    id: string;
+    title: string;
+    assigned_date: string;
+    due_date: string;
+    status: 'completed' | 'in_progress' | 'pending';
+    priority: 'high' | 'medium' | 'low';
+  }[];
 }
 
 export interface Candidate {
